@@ -1,7 +1,7 @@
 package Plack::App::Proxy;
 
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/host/;
+use Plack::Util::Accessor qw/host preserve_host_header/;
 use AnyEvent::HTTP;
 use LWP::UserAgent;
 use lib;
@@ -28,6 +28,7 @@ sub async {
   return sub {
     my $respond = shift;
     http_request($env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
+      headers => \%{$self->_req_headers($env)},
       want_body_handle => 1,
       on_body => sub {
         my ($handle, $headers) = @_;
@@ -55,10 +56,20 @@ sub block {
   my ($self, $env) = @_;
   my $ua = $self->{ua};
   my $req = HTTP::Request->new(
-    $env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO}
+    $env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
+    [$self->_req_headers($env)]
   );
   my $res = $ua->request($req);
   return [$res->code, [_res_headers($res)], [$res->content]];
+}
+
+sub _req_headers {
+  my ($self, $env) = @_;
+  my @headers = ("X-Forwarded-For", $env->{REMOTE_ADDR});
+  if ($self->preserve_host_header and $env->{HTTP_HOST}) {
+    push @headers, "Host", $env->{HTTP_HOST};
+  }
+  return @headers;
 }
 
 sub _res_headers {
