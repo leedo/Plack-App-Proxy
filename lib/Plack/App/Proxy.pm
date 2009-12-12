@@ -1,10 +1,10 @@
 package Plack::App::Proxy;
 
+use strict;
 use parent 'Plack::Component';
 use Plack::Util::Accessor qw/host preserve_host_header/;
 use AnyEvent::HTTP;
 use LWP::UserAgent;
-use lib;
 
 sub call {
   my ($self, $env) = @_;
@@ -15,7 +15,7 @@ sub call {
 sub setup {
   my ($self, $env) = @_;
   if ($env->{"psgi.streaming"}) {
-    $self->{proxy} = sub {$self->async(@_)};    
+    $self->{proxy} = sub {$self->async(@_)};
   }
   else {
     $self->{proxy} = sub {$self->block(@_)};
@@ -28,7 +28,7 @@ sub async {
   return sub {
     my $respond = shift;
     http_request($env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
-      headers => \%{$self->_req_headers($env)},
+      headers => {$self->_req_headers($env)},
       want_body_handle => 1,
       on_body => sub {
         my ($handle, $headers) = @_;
