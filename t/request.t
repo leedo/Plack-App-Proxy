@@ -1,6 +1,6 @@
 use Plack::App::Proxy;
 use Plack::Test;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 test_psgi
   app => Plack::App::Proxy->new(host => "http://www.google.com"),
@@ -11,16 +11,27 @@ test_psgi
     like $res->content, qr/Google Search/, "google";
   };
 
+# This example is an open proxy. Don't do this!
 test_psgi
   app => Plack::App::Proxy->new(host => sub {
     my $env = shift;
-    ($env->{PATH_INFO} =~ /^\/(.+)/);
+    my ($host) = ($env->{PATH_INFO} =~ /^\/(.+)/);
+    return $host;
   }),
   client => sub {
     my $cb = shift;
     my $req = HTTP::Request->new(GET => "http://localhost/http://www.google.com");
     my $res = $cb->($req);
-    like $res->content, qr/Google Search/, "google";
+    like $res->content, qr/Google Search/, "host callback";
+  };
+
+test_psgi
+  app => Plack::App::Proxy->new(host => sub {[403, [], ["forbidden"]]}),
+  client => sub {
+    my $cb = shift;
+    my $req = HTTP::Request->new(GET => "http://localhost/http://www.google.com");
+    my $res = $cb->($req);
+    is $res->code, 403, "host callback response";
   };
     
 test_psgi
