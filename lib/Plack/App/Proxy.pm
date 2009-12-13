@@ -29,7 +29,7 @@ sub async {
   return sub {
     my $respond = shift;
     AnyEvent::HTTP::http_request(
-      $env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
+      $env->{REQUEST_METHOD} => $self->_url($env),
       headers => {$self->_req_headers($env)},
       want_body_handle => 1,
       on_body => sub {
@@ -59,11 +59,19 @@ sub block {
   my ($self, $env) = @_;
   my $ua = $self->{ua};
   my $req = HTTP::Request->new(
-    $env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
+    $env->{REQUEST_METHOD} => $self->_url($env),
     [$self->_req_headers($env)]
   );
   my $res = $ua->request($req);
   return [$res->code, [$self->_res_headers($res)], [$res->content]];
+}
+
+sub _url {
+  my ($self, $env) = @_;
+  if (ref $self->host eq 'CODE') {
+    return $self->host->($env);
+  }
+  return $self->host;
 }
 
 sub _req_headers {
