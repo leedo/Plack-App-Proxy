@@ -22,7 +22,11 @@ sub call {
     push @headers, "Host", $env->{HTTP_HOST};
   }
   
-  return $self->{proxy}->($env->{REQUEST_METHOD}, $url, @headers);
+  # borrowed from FCGIDispatcher
+  my $input = delete $env->{'psgi.input'};
+  my $content = do { local $/; <$input> };
+  
+  return $self->{proxy}->($env->{REQUEST_METHOD}, $url, \@headers, $content);
 }
 
 sub setup {
@@ -39,21 +43,22 @@ sub setup {
 }
 
 sub async {
-  my ($self, $method, $url, @headers) = @_;
+  my ($self, $method, $url, $headers, $content) = @_;
   return sub {
     my $respond = shift;
     AnyEvent::HTTP::http_request(
       $method => $url,
-      headers => {@headers},
+      headers => {@$headers},
+      body => $content,
       want_body_handle => 1,
       on_body => sub {
         my ($handle, $headers) = @_;
         if (!$handle or $headers->{Status} =~ /^59\d+/) {
-          $respond->([500, [], ["server error"]]);
+          $respond->([501, ["Content-Type","text/html"], ["Gateway error"]]);
         }
         else {
           my $writer = $respond->([$headers->{Status},
-                                  [$self->_res_headers($headers)]]);
+                                  [$self->response_headers($headers)]]);
           $handle->on_eof(sub {
             undef $handle;
             $writer->close;
@@ -70,14 +75,13 @@ sub async {
 }
 
 sub blocking {
-  my ($self, $method, $url, @headers) = @_;
-  my $ua = $self->{ua};
-  my $req = HTTP::Request->new($method => $url, [@headers]);
-  my $res = $ua->request($req);
-  return [$res->code, [$self->_res_headers($res)], [$res->content]];
+  my ($self, $method, $url, $headers, $content) = @_;
+  my $req = HTTP::Request->new($method => $url, $headers, $content);
+  my $res = $self->{ua}->request($req);
+  return [$res->code, [$self->response_headers($res)], [$res->content]];
 }
 
-sub _res_headers {
+sub response_headers {
   my ($self, $headers) = @_;
   my @valid_headers = qw/Content-Length Content-Type ETag
                       Last-Modified Cache-Control Expires/;
