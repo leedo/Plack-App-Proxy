@@ -2,9 +2,8 @@ package Plack::App::Proxy;
 
 use strict;
 use parent 'Plack::Component';
+use Try::Tiny;
 use Plack::Util::Accessor qw/host preserve_host_header/;
-use AnyEvent::HTTP;
-use LWP::UserAgent;
 
 sub call {
   my ($self, $env) = @_;
@@ -15,9 +14,11 @@ sub call {
 sub setup {
   my ($self, $env) = @_;
   if ($env->{"psgi.streaming"}) {
+    require AnyEvent::HTTP;
     $self->{proxy} = sub {$self->async(@_)};
   }
   else {
+    require LWP::UserAgent;
     $self->{proxy} = sub {$self->block(@_)};
     $self->{ua} = LWP::UserAgent->new;
   }
@@ -27,7 +28,8 @@ sub async {
   my ($self, $env) = @_;
   return sub {
     my $respond = shift;
-    http_request($env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
+    AnyEvent::HTTP::http_request(
+      $env->{REQUEST_METHOD} => $self->host . $env->{PATH_INFO},
       headers => {$self->_req_headers($env)},
       want_body_handle => 1,
       on_body => sub {
@@ -36,7 +38,8 @@ sub async {
           $respond->([500, [], ["server error"]]);
         }
         else {
-          my $writer = $respond->([200, [_res_headers($headers)]]);
+          my $writer = $respond->([$headers->{Status},
+                                  [$self->_res_headers($headers)]]);
           $handle->on_eof(sub {
             undef $handle;
             $writer->close;
@@ -60,7 +63,7 @@ sub block {
     [$self->_req_headers($env)]
   );
   my $res = $ua->request($req);
-  return [$res->code, [_res_headers($res)], [$res->content]];
+  return [$res->code, [$self->_res_headers($res)], [$res->content]];
 }
 
 sub _req_headers {
@@ -73,7 +76,7 @@ sub _req_headers {
 }
 
 sub _res_headers {
-  my $headers = shift;
+  my ($self, $headers) = @_;
   my @valid_headers = qw/Content-Length Content-Type ETag
                       Last-Modified Cache-Control Expires/;
   if (ref $headers eq "HASH") {
