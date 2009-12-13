@@ -54,7 +54,7 @@ sub async {
       on_body => sub {
         my ($handle, $headers) = @_;
         if (!$handle or $headers->{Status} =~ /^59\d+/) {
-          $respond->([501, ["Content-Type","text/html"], ["Gateway error"]]);
+          $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
         }
         else {
           my $writer = $respond->([$headers->{Status},
@@ -78,6 +78,9 @@ sub blocking {
   my ($self, $method, $url, $headers, $content) = @_;
   my $req = HTTP::Request->new($method => $url, $headers, $content);
   my $res = $self->{ua}->request($req);
+  if ($res->code =~ /^5\d+/) {
+    return [502, ["Content-Type","text/html"], ["Gateway error"]];
+  }
   return [$res->code, [$self->response_headers($res)], [$res->content]];
 }
 
