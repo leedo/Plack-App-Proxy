@@ -3,6 +3,7 @@ package Plack::App::Proxy;
 use strict;
 use parent 'Plack::Component';
 use Plack::Util::Accessor qw/host url preserve_host_header/;
+use Try::Tiny;
 
 our $VERSION = '0.01';
 
@@ -38,11 +39,11 @@ sub call {
 
 sub setup {
   my ($self, $env) = @_;
-  if ($env->{"psgi.streaming"}) {
+  try {
+    die "Falling back to blocking client" unless $env->{"psgi.streaming"};
     require AnyEvent::HTTP;
     $self->{proxy} = sub {$self->async(@_)};
-  }
-  else {
+  } catch {
     require LWP::UserAgent;
     $self->{proxy} = sub {$self->blocking(@_)};
     $self->{ua} = LWP::UserAgent->new;
