@@ -2,16 +2,23 @@ package Plack::App::Proxy;
 
 use strict;
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/host preserve_host_header/;
+use Plack::Util::Accessor qw/host url preserve_host_header/;
+
+our $VERSION = '0.01';
 
 sub call {
   my ($self, $env) = @_;
   $self->setup($env) unless $self->{proxy};
   
   my $url;
-  if (ref $self->host eq 'CODE') {
+  if (ref $self->url eq 'CODE') {
+    $url = $self->url->($env);
+    return $url if ref $url eq "ARRAY";
+  }
+  elsif (ref $self->host eq 'CODE') {
     $url = $self->host->($env);
     return $url if ref $url eq "ARRAY";
+    $url = $url . $env->{PATH_INFO};
   }
   else {
     $url = $self->host . $env->{PATH_INFO};
@@ -99,3 +106,51 @@ sub response_headers {
 }
 
 1;
+
+__END__
+ 
+=head1 NAME
+ 
+Plack::App::Proxy - proxy requests
+ 
+=head1 SYNOPSIS
+ 
+  use Plack::Builder;
+ 
+  builder {
+      # proxy all requests to 127.0.0.1:80
+      mount "/static" => Plack::App::Proxy->new(host => "127.0.0.1:80")->to_app;
+      
+      # use some logic to decide which host to proxy to
+      mount "/host" => Plack::App::Proxy->new(host => sub {
+        my $env = shift;
+        ...
+        return $host;
+      })->to_app;
+      
+      # use some logic to decide what url to proxy
+      mounst "/url" => Plack::App::Proxy->new(url => sub {
+        my $env => shift;
+        ...
+        return $url;
+      })->to_app;
+  };
+
+=head1 DESCRIPTION
+ 
+Plack::App::Proxy
+ 
+=head1 AUTHOR
+ 
+Lee Aylward
+ 
+=head1 LICENSE
+ 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+ 
+=head1 SEE ALSO
+ 
+L<Plack::Builder>
+ 
+=cut

@@ -1,0 +1,38 @@
+NAME
+    Plack::App::Proxy - proxy requests
+
+SYNOPSIS
+      use Plack::Builder;
+ 
+      builder {
+          # proxy all requests to 127.0.0.1:80
+          mount "/static" => Plack::App::Proxy->new(host => "127.0.0.1:80")->to_app;
+      
+          # use some logic to decide which host to proxy to
+          mount "/host" => Plack::App::Proxy->new(host => sub {
+            my $env = shift;
+            ...
+            return $host;
+          })->to_app;
+      
+          # use some logic to decide what url to proxy
+          mounst "/url" => Plack::App::Proxy->new(url => sub {
+            my $env => shift;
+            ...
+            return $url;
+          })->to_app;
+      };
+
+DESCRIPTION
+    Plack::App::Proxy
+
+AUTHOR
+    Lee Aylward
+
+LICENSE
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+SEE ALSO
+    Plack::Builder
+
