@@ -21,8 +21,11 @@ sub call {
     return $url if ref $url eq "ARRAY";
     $url = $url . $env->{PATH_INFO};
   }
+  elsif ($url = $self->host) {
+    $url = $url . $env->{PATH_INFO};
+  }
   else {
-    $url = $self->host . $env->{PATH_INFO};
+    die "Neither proxy host nor URL are specified";
   }
   
   my @headers = ("X-Forwarded-For", $env->{REMOTE_ADDR});
@@ -130,7 +133,7 @@ Plack::App::Proxy - proxy requests
       })->to_app;
       
       # use some logic to decide what url to proxy
-      mounst "/url" => Plack::App::Proxy->new(url => sub {
+      mount "/url" => Plack::App::Proxy->new(url => sub {
         my $env => shift;
         ...
         return $url;

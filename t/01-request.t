@@ -26,7 +26,7 @@ test_psgi
     is $res->request->header("host"), "www.google.com", "dynamic host";
   };
 
-# Host callback returns forbidde response instead of host
+# Host callback returns forbidden response instead of host
 test_psgi
   app => Plack::App::Proxy->new(host => sub {[403, [], ["forbidden"]]}),
   client => sub {
