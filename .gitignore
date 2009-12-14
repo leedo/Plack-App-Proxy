@@ -1,0 +1,8 @@
+Makefile\.old
+Makefile
+Plack-App-Proxy-.*
+MANIFEST
+\.bak
+blib
+META.yml
+inc
