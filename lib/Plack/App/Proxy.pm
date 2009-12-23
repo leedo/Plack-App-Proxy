@@ -3,6 +3,7 @@ package Plack::App::Proxy;
 use strict;
 use parent 'Plack::Component';
 use Plack::Util::Accessor qw/host url preserve_host_header/;
+use Plack::Request;
 use Try::Tiny;
 
 our $VERSION = '0.01';
@@ -11,6 +12,8 @@ sub call {
   my ($self, $env) = @_;
   $self->setup($env) unless $self->{proxy};
   
+  my $req = Plack::Request->new($env);
+
   my $url;
   if (ref $self->url eq 'CODE') {
     $url = $self->url->($env);
@@ -33,9 +36,16 @@ sub call {
     push @headers, "Host", $env->{HTTP_HOST};
   }
   
-  # borrowed from FCGIDispatcher
-  my $input = delete $env->{'psgi.input'};
-  my $content = do { local $/; <$input> };
+  push @headers, map {$_ => $req->headers->header($_)}
+                 grep {$req->headers->header($_)}
+                 qw/Accept Accept-Encoding Accept-Charset
+                    X-Requested-With Referer User-Agent Cookie/;
+  
+  my $content = $req->raw_body;
+  if ($content) {
+    push @headers, ("Content-Type", $req->content_type,
+                    "Content-Length", $req->content_length);
+  }
   
   return $self->{proxy}->($env->{REQUEST_METHOD}, $url, \@headers, $content);
 }
@@ -71,7 +81,7 @@ sub async {
           my $writer = $respond->([$headers->{Status},
                                   [$self->response_headers($headers)]]);
           $handle->on_eof(sub {
-            undef $handle;
+            $handle->destroy;
             $writer->close;
           });
           $handle->on_error(sub{});
