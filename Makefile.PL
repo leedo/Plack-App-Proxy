@@ -4,6 +4,7 @@ all_from 'lib/Plack/App/Proxy.pm';
 readme_from 'lib/Plack/App/Proxy.pm';
 build_requires 'Test::More';
 requires 'Plack';
+requires 'Plack::Request';
 requires 'AnyEvent::HTTP' => 1.44;
 requires 'LWP';
 auto_set_repository;

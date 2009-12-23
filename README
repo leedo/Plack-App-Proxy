@@ -16,7 +16,7 @@ SYNOPSIS
           })->to_app;
       
           # use some logic to decide what url to proxy
-          mounst "/url" => Plack::App::Proxy->new(url => sub {
+          mount "/url" => Plack::App::Proxy->new(url => sub {
             my $env => shift;
             ...
             return $url;
