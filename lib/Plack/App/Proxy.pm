@@ -107,7 +107,7 @@ sub blocking {
 
 sub response_headers {
   my ($self, $headers) = @_;
-  my @valid_headers = qw/Content-Length Content-Type ETag
+  my @valid_headers = qw/Content-Length Content-Type Content-Encoding ETag
                       Last-Modified Cache-Control Expires/;
   if (ref $headers eq "HASH") {
     map {$_ => $headers->{lc $_}}
