@@ -4,7 +4,7 @@ use Test::More tests => 5;
 
 # regular static proxy
 test_psgi
-  app => Plack::App::Proxy->new(host => "http://www.google.com"),
+  app => Plack::App::Proxy->new(host => "http://www.google.com/intl/en"),
   client => sub {
     my $cb = shift;
     my $req = HTTP::Request->new(GET => "http://localhost/index.html");
@@ -39,7 +39,7 @@ test_psgi
 # Don't rewrite the Host header
 test_psgi
   app => Plack::App::Proxy->new(
-    host => "http://www.google.com/",
+    host => "http://www.google.com/intl/en",
     preserve_host_header => 1,
   ),
   client => sub {
@@ -59,7 +59,7 @@ test_psgi
   }),
   client => sub {
     my $cb = shift;
-    my $req = HTTP::Request->new(GET => "http://localhost/http://www.google.com");
+    my $req = HTTP::Request->new(GET => "http://localhost/http://www.google.com/intl/en/");
     my $res = $cb->($req);
     like $res->content, qr/Google Search/, "url callback";
   };
