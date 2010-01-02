@@ -86,7 +86,7 @@ sub async {
           });
           $handle->on_error(sub{});
           $handle->on_read(sub {
-            my $data = $_[0]->rbuf;
+            my $data = delete $_[0]->{rbuf};
             $writer->write($data) if $data;
           });
         }
