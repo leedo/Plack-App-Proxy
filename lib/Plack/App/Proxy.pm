@@ -72,7 +72,7 @@ sub async {
       headers => {@$headers},
       body => $content,
       want_body_handle => 1,
-      on_body => sub {
+      sub {
         my ($handle, $headers) = @_;
         if (!$handle or $headers->{Status} =~ /^59\d+/) {
           $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
