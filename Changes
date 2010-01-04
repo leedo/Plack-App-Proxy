@@ -1,5 +1,12 @@
 Revision history for Plack-App-Proxy
 
+0.05    01/04/2009
+        Re-upload with missing changes
+
+0.04    01/04/2009
+        Added gzip support (hiratara)
+        AnyEvent::HTTP fixes (hiratara)
+
 0.03    12/30/2009
         Don't use google.com for tests because of localizations
 
