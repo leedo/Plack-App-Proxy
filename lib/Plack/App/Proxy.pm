@@ -6,7 +6,7 @@ use Plack::Util::Accessor qw/host url preserve_host_header/;
 use Plack::Request;
 use Try::Tiny;
 
-our $VERSION = '0.01';
+our $VERSION = '0.04';
 
 sub call {
   my ($self, $env) = @_;
