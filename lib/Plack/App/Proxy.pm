@@ -6,7 +6,7 @@ use Plack::Util::Accessor qw/host url preserve_host_header/;
 use Plack::Request;
 use Try::Tiny;
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 sub call {
   my ($self, $env) = @_;
@@ -30,7 +30,6 @@ sub call {
   else {
     die "Neither proxy host nor URL are specified";
   }
-  
   my @headers = ("X-Forwarded-For", $env->{REMOTE_ADDR});
   if ($self->preserve_host_header and $env->{HTTP_HOST}) {
     push @headers, "Host", $env->{HTTP_HOST};
