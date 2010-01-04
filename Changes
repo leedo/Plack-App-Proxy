@@ -1,5 +1,11 @@
 Revision history for Plack-App-Proxy
 
-0.01    Date/time
+0.03    12/30/2009
+        Don't use google.com for tests because of localizations
+
+0.02    12/25/2009
+        Forgot to include Makefile.PL
+
+0.01    12/22/2009
         First version, released on an unsuspecting world.
 
