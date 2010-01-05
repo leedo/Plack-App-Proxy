@@ -74,7 +74,7 @@ sub call {
           $handle->on_error(sub{});
           $handle->on_read(sub {
             my $data = delete $_[0]->{rbuf};
-            $writer->write($data);
+            $writer->write($data) if defined $data;
           });
         }
       }
