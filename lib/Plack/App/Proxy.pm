@@ -52,7 +52,7 @@ sub call {
 sub setup {
   my ($self, $env) = @_;
   try {
-    die "Falling back to blocking client" unless $env->{"psgi.streaming"};
+    die "Falling back to blocking client" unless $env->{"psgi.streaming"} && $env->{"psgi.nonblocking"};
     require AnyEvent::HTTP;
     $self->{proxy} = sub {$self->async(@_)};
   } catch {
