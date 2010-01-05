@@ -3,6 +3,7 @@ use warnings;
 use Plack::App::Proxy;
 use Plack::Test;
 use Test::More tests => 1;
+$Plack::Test::Impl = 'Server';
 
 test_psgi
   app => Plack::App::Proxy->new(host => "http://www.google.com/intl/en"),

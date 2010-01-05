@@ -5,13 +5,17 @@ use parent 'Plack::Component';
 use Plack::Util::Accessor qw/host url preserve_host_header/;
 use Plack::Request;
 use Try::Tiny;
+use AnyEvent::HTTP;
 
 our $VERSION = '0.06';
 
 sub call {
   my ($self, $env) = @_;
-  $self->setup($env) unless $self->{proxy};
-  
+
+  unless ($env->{'psgi.streaming'}) {
+      die "Plack::App::Proxy only runs with the server with psgi.streaming support";
+  }
+
   my $req = Plack::Request->new($env);
 
   my $url;
@@ -45,30 +49,13 @@ sub call {
     push @headers, ("Content-Type", $req->content_type,
                     "Content-Length", $req->content_length);
   }
-  
-  return $self->{proxy}->($env->{REQUEST_METHOD}, $url, \@headers, $content);
-}
 
-sub setup {
-  my ($self, $env) = @_;
-  try {
-    die "Falling back to blocking client" unless $env->{"psgi.streaming"} && $env->{"psgi.nonblocking"};
-    require AnyEvent::HTTP;
-    $self->{proxy} = sub {$self->async(@_)};
-  } catch {
-    require LWP::UserAgent;
-    $self->{proxy} = sub {$self->blocking(@_)};
-    $self->{ua} = LWP::UserAgent->new;
-  }
-}
-
-sub async {
-  my ($self, $method, $url, $headers, $content) = @_;
   return sub {
     my $respond = shift;
+    my $cv = AE::cv;
     AnyEvent::HTTP::http_request(
-      $method => $url,
-      headers => {@$headers},
+      $env->{REQUEST_METHOD} => $url,
+      headers => {@headers},
       body => $content,
       want_body_handle => 1,
       sub {
@@ -82,26 +69,18 @@ sub async {
           $handle->on_eof(sub {
             $handle->destroy;
             $writer->close;
+            $cv->send;
           });
           $handle->on_error(sub{});
           $handle->on_read(sub {
             my $data = delete $_[0]->{rbuf};
-            $writer->write($data) if $data;
+            $writer->write($data);
           });
         }
       }
     );
+    $cv->recv unless $env->{"psgi.nonblocking"};
   }
-}
-
-sub blocking {
-  my ($self, $method, $url, $headers, $content) = @_;
-  my $req = HTTP::Request->new($method => $url, $headers, $content);
-  my $res = $self->{ua}->request($req);
-  if ($res->code =~ /^5\d+/) {
-    return [502, ["Content-Type","text/html"], ["Gateway error"]];
-  }
-  return [$res->code, [$self->response_headers($res)], [$res->content]];
 }
 
 sub response_headers {

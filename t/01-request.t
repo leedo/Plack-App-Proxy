@@ -1,6 +1,7 @@
 use Plack::App::Proxy;
 use Plack::Test;
 use Test::More tests => 5;
+$Plack::Test::Impl = 'Server';
 
 # regular static proxy
 test_psgi

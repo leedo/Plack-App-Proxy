@@ -6,6 +6,5 @@ test_requires 'Test::More';
 requires 'Plack' => 0.9021; # for Plack::Component
 requires 'Plack::Request';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
-requires 'LWP';
 auto_set_repository;
 WriteAll;
