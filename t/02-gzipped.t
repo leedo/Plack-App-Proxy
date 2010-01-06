@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Plack::App::Proxy;
 use Plack::Test;
-use Test::More tests => 1;
+use Test::More;
 
 test_psgi
   app => Plack::App::Proxy->new(host => "http://www.google.com/intl/en"),
@@ -19,3 +19,5 @@ test_psgi
     like $res->headers->header('Content-Encoding'), qr/gzip/, 
          "Recieved the contents gzipped";
   };
+
+done_testing;

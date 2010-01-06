@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Plack::Test;
 use Plack::App::Proxy;
-use Test::More tests => 3;
+use Test::More;
 
 # Do the test with psgi.streaming
 use AnyEvent;
@@ -24,3 +24,5 @@ test_psgi
          qr(<html[^>]*>.*<html[^>]*>)sm,
          "Shouldn't have more than two html tags.";
   };
+
+done_testing;

@@ -1,6 +1,6 @@
 use Plack::App::Proxy;
 use Plack::Test;
-use Test::More tests => 5;
+use Test::More;
 
 # regular static proxy
 test_psgi
@@ -63,3 +63,5 @@ test_psgi
     my $res = $cb->($req);
     like $res->content, qr/Google Search/, "url callback";
   };
+
+done_testing;
