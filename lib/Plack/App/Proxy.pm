@@ -7,13 +7,13 @@ use Plack::Request;
 use Try::Tiny;
 use AnyEvent::HTTP;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub call {
   my ($self, $env) = @_;
 
   unless ($env->{'psgi.streaming'}) {
-      die "Plack::App::Proxy only runs with the server with psgi.streaming support";
+    die "Plack::App::Proxy only runs with the server with psgi.streaming support";
   }
 
   my $req = Plack::Request->new($env);
