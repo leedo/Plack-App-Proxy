@@ -10,7 +10,31 @@ sub do_tests {
       my $cb = shift;
       my $req = HTTP::Request->new(GET => "http://localhost/index.html");
       my $res = $cb->($req);
+      ok $res->is_success, "Check the status line.";
       like $res->content, qr/Google Search/, "static proxy";
+      like $res->content, 
+           qr(<html[^>]*>)sm, 
+           "Should have a html tag.";
+      unlike $res->content, 
+           qr(<html[^>]*>.*<html[^>]*>)sm, 
+           "Shouldn't have more than two html tags.";
+    };
+
+  # Receive the encoded contents.
+  test_psgi
+    app => Plack::App::Proxy->new(host => "http://www.google.com/intl/en"),
+    client => sub {
+      my $cb = shift;
+      # The client send the request to encode the response.
+      my $req = HTTP::Request->new(
+        GET => "http://localhost/index.html", [
+          'Accept-Encoding' => 'gzip,deflate', 
+          'User-Agent'      => 'Mozilla/5.0',
+        ]
+      );
+      my $res = $cb->($req);
+      like $res->headers->header('Content-Encoding'), qr/gzip/, 
+           "Recieved the contents gzipped";
     };
 
   # Get the proxy host from the Host header
