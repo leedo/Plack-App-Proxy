@@ -1,3 +1,5 @@
+use strict;
+use warnings;
 use Plack::App::Proxy;
 use Plack::Test;
 use Test::More;
