@@ -1,7 +1,8 @@
 Revision history for Plack-App-Proxy
 
 0.07    01/05/2009
-        No longer depend on LWP
+        Only use AnyEvent::HTTP for both blocking and non-blocking
+        servers
 
 0.06    01/04/2009
         Fixed typo in MANIFEST.SKIP
