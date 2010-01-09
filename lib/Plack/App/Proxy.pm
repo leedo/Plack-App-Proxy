@@ -7,7 +7,7 @@ use Plack::Request;
 use Try::Tiny;
 use AnyEvent::HTTP;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub call {
   my ($self, $env) = @_;
