@@ -13,3 +13,4 @@ Plack-App-Proxy-
 \.git
 ^MANIFEST\.
 \.bak
+\.shipit
