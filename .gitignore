@@ -2,7 +2,9 @@ Makefile\.old
 Makefile
 Plack-App-Proxy-.*
 MANIFEST
+MANIFEST.bak
 \.bak
 blib
 META.yml
 inc
+*.tar.gz
