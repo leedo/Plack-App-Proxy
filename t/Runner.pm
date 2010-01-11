@@ -1,3 +1,4 @@
+package t::Runner;
 use strict;
 use warnings;
 use Plack::App::Proxy;
