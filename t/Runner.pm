@@ -68,35 +68,30 @@ sub run_tests {
         ( $app_host, $app_port ) = @_;
         Plack::App::Proxy->new( host => sub {
           my $env = shift;
+
+          # Host callback returns forbidden response instead of host
+          return [ 403, [], [ "forbidden" ] ] 
+                                           if $env->{PATH_INFO} =~ m(^/secret);
+
           return 'http://' . $env->{HTTP_HOST} . '/';
         } );
       },
       app   => sub { [ 200, [], ["WORLD"] ] },
       client => sub {
         my $cb = shift;
-        my $req = HTTP::Request->new(
+        my $req1 = HTTP::Request->new(
           GET => "http://localhost/index.html", 
           [ Host => "$app_host:$app_port" ]
         );
-        my $res = $cb->($req);
-        is $res->content, "WORLD", "dynamic host";
+        my $res1 = $cb->($req1);
+        is $res1->content, "WORLD", "dynamic host";
+
+        my $req2 = HTTP::Request->new(GET => "http://localhost/secret/");
+        my $res2 = $cb->($req2);
+        is $res2->code, 403, "dynamic host forbidden reponse";
       },
     );
   }
-
-  # Host callback returns forbidden response instead of host
-  test_proxy(
-    proxy  => sub { Plack::App::Proxy->new( 
-      host => sub { [ 403, [], [ "forbidden" ] ] },
-    ) },
-    app    => sub { [ 200, [], [ 'DUMMY' ] ] },
-    client => sub {
-      my $cb = shift;
-      my $req = HTTP::Request->new(GET => "http://localhost/");
-      my $res = $cb->($req);
-      is $res->code, 403, "dynamic host forbidden reponse";
-    },
-  );
 
   # Don't rewrite the Host header
   test_proxy(
