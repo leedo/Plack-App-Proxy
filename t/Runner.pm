@@ -121,18 +121,25 @@ sub run_tests {
         ( $app_host, $app_port ) = @_;
         Plack::App::Proxy->new( url => sub {
           my $env = shift;
-          my ( $host ) = ( $env->{PATH_INFO} =~ /^\/(.+)/ );
-          return $host;
+
+          my ( $url ) = ( $env->{PATH_INFO} =~ m(^\/(https?://.*)) )
+                                        or return [ 403, [], [ "forbidden" ] ];
+
+          return $url;
         } );
       },
       app   => sub { [ 200, [], ["HELLO"] ] },
       client => sub {
         my $cb = shift;
-        my $req = HTTP::Request->new(
+        my $req1 = HTTP::Request->new(
           GET => "http://localhost/http://$app_host:$app_port/"
         );
-        my $res = $cb->($req);
-        is $res->content, "HELLO", "url callback";
+        my $res1 = $cb->($req1);
+        is $res1->content, "HELLO", "url callback";
+
+        my $req2 = HTTP::Request->new(GET => "http://localhost/index.html");
+        my $res2 = $cb->($req2);
+        is $res2->code, 403, "dynamic URL forbidden reponse";
       },
     );
   }
