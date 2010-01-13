@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.09    01/13/2009
+        The tests no longer depend on the Google site.
+
 0.08    01/09/2009
         Fixed memory leaks for perl 5.8.x.
         Added more tests.
