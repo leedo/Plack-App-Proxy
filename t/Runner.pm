@@ -148,6 +148,23 @@ sub run_tests {
     );
   }
 
+  # with QUERY_STRING
+  test_proxy(
+    proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]") },
+    app   => sub {
+      my $env = shift;
+      is $env->{QUERY_STRING}, 'k1=v1&k2=v2';
+      return [ 200, [], [ "HELLO" ] ];
+    },
+    client => sub {
+      my $cb = shift;
+      my $req = HTTP::Request->new(
+        GET => "http://localhost/proxy/?k1=v1&k2=v2"
+      );
+      my $res = $cb->($req);
+      is $res->content, 'HELLO';
+    },
+  );
 }
 
 1;

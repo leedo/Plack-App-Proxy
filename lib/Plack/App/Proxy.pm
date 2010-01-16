@@ -27,9 +27,11 @@ sub call {
     $url = $self->host->($env);
     return $url if ref $url eq "ARRAY";
     $url = $url . $env->{PATH_INFO};
+    $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
   }
   elsif ($url = $self->host) {
     $url = $url . $env->{PATH_INFO};
+    $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
   }
   else {
     die "Neither proxy host nor URL are specified";
