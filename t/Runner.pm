@@ -48,8 +48,12 @@ sub run_tests {
 
   # regular static proxy
   test_proxy(
-    proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]/") },
-    app   => sub { [ 200, [], [ ('x') x 123, ('y') x 111 ] ] },
+    proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]") },
+    app   => sub {
+      my $env = shift;
+      is $env->{PATH_INFO}, '/index.html', 'PATH_INFO accessed';
+      return [ 200, [], [ ('x') x 123, ('y') x 111 ] ];
+    },
     client => sub {
       my $cb = shift;
       my $req = HTTP::Request->new(GET => "http://localhost/index.html");
@@ -73,7 +77,7 @@ sub run_tests {
           return [ 403, [], [ "forbidden" ] ] 
                                            if $env->{PATH_INFO} =~ m(^/secret);
 
-          return 'http://' . $env->{HTTP_HOST} . '/';
+          return 'http://' . $env->{HTTP_HOST};
         } );
       },
       app   => sub { [ 200, [], ["WORLD"] ] },
@@ -96,7 +100,7 @@ sub run_tests {
   # Don't rewrite the Host header
   test_proxy(
     proxy => sub { Plack::App::Proxy->new(
-      host => "http://$_[0]:$_[1]/", preserve_host_header => 1,
+      host => "http://$_[0]:$_[1]", preserve_host_header => 1,
     ) },
     app    => sub {
       my $env = shift;
