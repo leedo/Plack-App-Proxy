@@ -6,6 +6,7 @@ test_requires 'Test::More' => '0.88';  # for done_testing()
 test_requires 'Test::Requires';
 requires 'Plack' => 0.9028; # for psgi.streaming in blocking servers
 requires 'Plack::Request';
+requires 'HTTP::Headers';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
 auto_set_repository;
 WriteAll;

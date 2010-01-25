@@ -4,10 +4,33 @@ use strict;
 use parent 'Plack::Component';
 use Plack::Util::Accessor qw/host url preserve_host_header/;
 use Plack::Request;
+use HTTP::Headers;
 use Try::Tiny;
 use AnyEvent::HTTP;
 
 our $VERSION = '0.09';
+
+# hop-by-hop headers (see also RFC2616)
+my @hop_by_hop = qw(
+  Connection Keep-Alive Proxy-Authenticate Proxy-Authorization
+  TE Trailer Transfer-Encoding Upgrade
+);
+
+sub filter_headers {
+  my $self = shift;
+  my ( $headers ) = @_;
+
+  # Save from known hop-by-hop deletion.
+  my @connection_tokens = $headers->header('Connection');
+
+  # Remove hop-by-hop headers.
+  $headers->remove_header( $_ ) for @hop_by_hop;
+
+  # Connection header's tokens are also hop-by-hop.
+  for my $token ( @connection_tokens ){
+    $headers->remove_header( $_ ) for split /\s*,\s*/, $token;
+  }
+}
 
 sub call {
   my ($self, $env) = @_;
@@ -36,28 +59,20 @@ sub call {
   else {
     die "Neither proxy host nor URL are specified";
   }
-  my @headers = ("X-Forwarded-For", $env->{REMOTE_ADDR});
-  if ($self->preserve_host_header and $env->{HTTP_HOST}) {
-    push @headers, "Host", $env->{HTTP_HOST};
-  }
-  
-  push @headers, map {$_ => $req->headers->header($_)}
-                 grep {$req->headers->header($_)}
-                 qw/Accept Accept-Encoding Accept-Charset
-                    X-Requested-With Referer User-Agent Cookie/;
-  
+
+  my $headers = $req->headers->clone;
+  $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
+  $headers->remove_header("Host") unless $self->preserve_host_header;
+  $self->filter_headers( $headers );
+
   my $content = $req->raw_body;
-  if ($content) {
-    push @headers, ("Content-Type", $req->content_type,
-                    "Content-Length", $req->content_length);
-  }
 
   return sub {
     my $respond = shift;
     my $cv = AE::cv;
     AnyEvent::HTTP::http_request(
       $env->{REQUEST_METHOD} => $url,
-      headers => {@headers},
+      headers => $headers,
       body => $content,
       want_body_handle => 1,
       sub {
@@ -92,11 +107,17 @@ sub call {
 }
 
 sub response_headers {
-  my ($self, $headers) = @_;
-  my @valid_headers = qw/Content-Length Content-Type Content-Encoding ETag
-                      Last-Modified Cache-Control Expires/;
-  return map {$_ => $headers->{lc $_}}
-    grep {$headers->{lc $_}} @valid_headers; 
+  my ($self, $ae_headers) = @_;
+
+  my $headers = HTTP::Headers->new( 
+    map { $_ => $ae_headers->{$_} } grep {! /^[A-Z]/} keys %$ae_headers
+  );
+  $self->filter_headers( $headers );
+
+  my @headers;
+  $headers->scan( sub { push @headers, @_ } );
+
+  return @headers;
 }
 
 1;
