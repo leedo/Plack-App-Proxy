@@ -6,7 +6,7 @@ SYNOPSIS
  
       builder {
           # proxy all requests to 127.0.0.1:80
-          mount "/static" => Plack::App::Proxy->new(host => "127.0.0.1:80")->to_app;
+          mount "/static" => Plack::App::Proxy->new(host => "http://127.0.0.1:80")->to_app;
       
           # use some logic to decide which host to proxy to
           mount "/host" => Plack::App::Proxy->new(host => sub {
