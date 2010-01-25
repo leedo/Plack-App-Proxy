@@ -95,14 +95,8 @@ sub response_headers {
   my ($self, $headers) = @_;
   my @valid_headers = qw/Content-Length Content-Type Content-Encoding ETag
                       Last-Modified Cache-Control Expires/;
-  if (ref $headers eq "HASH") {
-    map {$_ => $headers->{lc $_}}
+  return map {$_ => $headers->{lc $_}}
     grep {$headers->{lc $_}} @valid_headers; 
-  }
-  elsif (ref $headers eq "HTTP::Response") {
-    map {$_ => $headers->header($_)}
-    grep {$headers->header($_)} @valid_headers;
-  }
 }
 
 1;
