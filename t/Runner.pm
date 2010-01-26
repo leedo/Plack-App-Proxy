@@ -7,6 +7,7 @@ use Plack::Loader;
 use Plack::Test;
 use Test::More;
 use Test::TCP;
+use LWP::UserAgent;
 use base Exporter::;
 our @EXPORT = qw(test_proxy run_tests);
 
@@ -27,6 +28,8 @@ sub test_proxy {
           app => $proxy->( $host, $port ),
           client => $client,
           host => $host,
+          # disable the auto redirection of LWP::UA
+          ua => LWP::UserAgent->new( max_redirect => 0 ),
       );
     },
     server => sub {
@@ -181,6 +184,27 @@ sub run_tests {
       );
       my $res = $cb->($req);
       is $res->content, '/foo';
+    },
+  );
+
+  # redirect
+  test_proxy(
+    proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]") },
+    app   => sub {
+      my $env = shift;
+      if( $env->{PATH_INFO} eq '/index.html' ){
+        return [ 302, [
+          Location => 'http://' . $env->{HTTP_HOST} . '/hello.html' 
+          ], [] ];
+      }
+      return [ 200, [], [ "HELLO" ] ];
+    },
+    client => sub {
+      my $cb = shift;
+      my $req = HTTP::Request->new( GET => "http://localhost/index.html" );
+      my $res = $cb->($req);
+      like $res->header( 'Location' ), qr(\bhello\.html), 
+           "pass the Location header to the client directly";
     },
   );
 }

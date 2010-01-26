@@ -86,11 +86,19 @@ sub call {
             $method => $url,
             headers => $headers,
             body => $content,
+            recurse => 0,  # want not to treat any redirections
             want_body_handle => 1,
             sub {
                 my ($handle, $headers) = @_;
-                if (!$handle or $headers->{Status} =~ /^59\d+/) {
+                if (! defined $handle or $headers->{Status} =~ /^59\d+/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
+                }
+                elsif( $handle eq '' ) {
+                    # The response didn't have a body.
+                    $respond->( [
+                        $headers->{Status}, 
+                        [$self->response_headers($headers)], []
+                    ] );
                 }
                 else {
                     my $writer = $respond->([
