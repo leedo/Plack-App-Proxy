@@ -65,7 +65,7 @@ sub call {
   $headers->remove_header("Host") unless $self->preserve_host_header;
   $self->filter_headers( $headers );
 
-  my $content = $req->raw_body;
+  my $content = $req->content;
 
   return sub {
     my $respond = shift;
