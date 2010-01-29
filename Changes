@@ -1,5 +1,10 @@
 Revision history for Plack-App-Proxy
 
+0.10    01/29/2009
+        Fixed the bug which drops QUERY_STRING from the original request.
+        Enabled the Set-Cookies headers in the response.
+        (Any other headers are also enabled. See RFC 2616.)
+
 0.09    01/13/2009
         The tests no longer depend on the Google site.
 
