@@ -32,6 +32,24 @@ sub filter_headers {
     }
 }
 
+sub build_url_from_env {
+    my($self, $env) = @_;
+
+    if (ref $self->url eq 'CODE') {
+        return $self->url->($env);
+    }
+
+    my $url = ref $self->host eq 'CODE' ? $self->host->($env) : $self->host
+        or die "Neither proxy host nor URL are configured";
+
+    unless (ref $url eq 'ARRAY') {
+        $url .= $env->{PATH_INFO} || '';
+        $url .= '?' . $env->{QUERY_STRING} if defined $env->{QUERY_STRING} && length $env->{QUERY_STRING} > 0;
+    }
+
+    return $url;
+}
+
 sub call {
     my ($self, $env) = @_;
 
@@ -41,24 +59,10 @@ sub call {
 
     my $req = Plack::Request->new($env);
 
-    my $url;
-    if (ref $self->url eq 'CODE') {
-        $url = $self->url->($env);
-        return $url if ref $url eq "ARRAY";
-    }
-    elsif (ref $self->host eq 'CODE') {
-        $url = $self->host->($env);
-        return $url if ref $url eq "ARRAY";
-        $url = $url . $env->{PATH_INFO};
-        $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
-    }
-    elsif ($url = $self->host) {
-        $url = $url . $env->{PATH_INFO};
-        $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
-    }
-    else {
-        die "Neither proxy host nor URL are specified";
-    }
+    my $url = $self->build_url_from_env($env);
+
+    # HACK: allow url/host callback to return PSGI response array ref
+    return $url if ref $url eq "ARRAY";
 
     my $headers = $req->headers->clone;
     $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
