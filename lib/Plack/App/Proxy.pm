@@ -12,137 +12,138 @@ our $VERSION = '0.10';
 
 # hop-by-hop headers (see also RFC2616)
 my @hop_by_hop = qw(
-  Connection Keep-Alive Proxy-Authenticate Proxy-Authorization
-  TE Trailer Transfer-Encoding Upgrade
+    Connection Keep-Alive Proxy-Authenticate Proxy-Authorization
+    TE Trailer Transfer-Encoding Upgrade
 );
 
 sub filter_headers {
-  my $self = shift;
-  my ( $headers ) = @_;
+    my $self = shift;
+    my ( $headers ) = @_;
 
-  # Save from known hop-by-hop deletion.
-  my @connection_tokens = $headers->header('Connection');
+    # Save from known hop-by-hop deletion.
+    my @connection_tokens = $headers->header('Connection');
 
-  # Remove hop-by-hop headers.
-  $headers->remove_header( $_ ) for @hop_by_hop;
+    # Remove hop-by-hop headers.
+    $headers->remove_header( $_ ) for @hop_by_hop;
 
-  # Connection header's tokens are also hop-by-hop.
-  for my $token ( @connection_tokens ){
-    $headers->remove_header( $_ ) for split /\s*,\s*/, $token;
-  }
+    # Connection header's tokens are also hop-by-hop.
+    for my $token ( @connection_tokens ){
+        $headers->remove_header( $_ ) for split /\s*,\s*/, $token;
+    }
 }
 
 sub call {
-  my ($self, $env) = @_;
+    my ($self, $env) = @_;
 
-  unless ($env->{'psgi.streaming'}) {
-    die "Plack::App::Proxy only runs with the server with psgi.streaming support";
-  }
+    unless ($env->{'psgi.streaming'}) {
+        die "Plack::App::Proxy only runs with the server with psgi.streaming support";
+    }
 
-  my $req = Plack::Request->new($env);
+    my $req = Plack::Request->new($env);
 
-  my $url;
-  if (ref $self->url eq 'CODE') {
-    $url = $self->url->($env);
-    return $url if ref $url eq "ARRAY";
-  }
-  elsif (ref $self->host eq 'CODE') {
-    $url = $self->host->($env);
-    return $url if ref $url eq "ARRAY";
-    $url = $url . $env->{PATH_INFO};
-    $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
-  }
-  elsif ($url = $self->host) {
-    $url = $url . $env->{PATH_INFO};
-    $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
-  }
-  else {
-    die "Neither proxy host nor URL are specified";
-  }
+    my $url;
+    if (ref $self->url eq 'CODE') {
+        $url = $self->url->($env);
+        return $url if ref $url eq "ARRAY";
+    }
+    elsif (ref $self->host eq 'CODE') {
+        $url = $self->host->($env);
+        return $url if ref $url eq "ARRAY";
+        $url = $url . $env->{PATH_INFO};
+        $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
+    }
+    elsif ($url = $self->host) {
+        $url = $url . $env->{PATH_INFO};
+        $url = $url . '?' . $env->{QUERY_STRING} if exists $env->{QUERY_STRING};
+    }
+    else {
+        die "Neither proxy host nor URL are specified";
+    }
 
-  my $headers = $req->headers->clone;
-  $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
-  $headers->remove_header("Host") unless $self->preserve_host_header;
-  $self->filter_headers( $headers );
+    my $headers = $req->headers->clone;
+    $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
+    $headers->remove_header("Host") unless $self->preserve_host_header;
+    $self->filter_headers( $headers );
 
-  my $content = $req->content;
+    my $content = $req->content;
 
-  return sub {
-    my $respond = shift;
-    my $cv = AE::cv;
-    AnyEvent::HTTP::http_request(
-      $env->{REQUEST_METHOD} => $url,
-      headers => $headers,
-      body => $content,
-      want_body_handle => 1,
-      sub {
-        my ($handle, $headers) = @_;
-        if (!$handle or $headers->{Status} =~ /^59\d+/) {
-          $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
-        }
-        else {
-          my $writer = $respond->([$headers->{Status},
-                                  [$self->response_headers($headers)]]);
-          $handle->on_eof(sub {
-            $handle->destroy;
-            $writer->close;
-            $cv->send;
+    return sub {
+        my $respond = shift;
+        my $cv = AE::cv;
+        AnyEvent::HTTP::http_request(
+            $env->{REQUEST_METHOD} => $url,
+            headers => $headers,
+            body => $content,
+            want_body_handle => 1,
+            sub {
+                my ($handle, $headers) = @_;
+                if (!$handle or $headers->{Status} =~ /^59\d+/) {
+                    $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
+                }
+                else {
+                    my $writer = $respond->([
+                        $headers->{Status},
+                        [$self->response_headers($headers)],
+                    ]);
+                    $handle->on_eof(sub {
+                        $handle->destroy;
+                        $writer->close;
+                        $cv->send;
+                        undef $handle;  # free the cyclic reference.
+                    });
+                    $handle->on_error(sub{});
+                    $handle->on_read(sub {
+                        my $data = delete $_[0]->{rbuf};
+                        $writer->write($data) if defined $data;
+                    });
+                }
 
-            undef $handle;  # free the cyclic reference.
-          });
-          $handle->on_error(sub{});
-          $handle->on_read(sub {
-            my $data = delete $_[0]->{rbuf};
-            $writer->write($data) if defined $data;
-          });
-        }
-
-        # Free the reference manually for perl 5.8.x 
-        # to avoid nested closure memory leaks.
-        undef $respond;
-      }
-    );
-    $cv->recv unless $env->{"psgi.nonblocking"};
-  }
+                # Free the reference manually for perl 5.8.x
+                # to avoid nested closure memory leaks.
+                undef $respond;
+            }
+        );
+        $cv->recv unless $env->{"psgi.nonblocking"};
+    }
 }
 
 sub response_headers {
-  my ($self, $ae_headers) = @_;
+    my ($self, $ae_headers) = @_;
 
-  my $headers = HTTP::Headers->new( 
-    map { $_ => $ae_headers->{$_} } grep {! /^[A-Z]/} keys %$ae_headers
-  );
-  $self->filter_headers( $headers );
+    my $headers = HTTP::Headers->new( 
+        map { $_ => $ae_headers->{$_} } grep {! /^[A-Z]/} keys %$ae_headers
+    );
+    $self->filter_headers( $headers );
 
-  my @headers;
-  $headers->scan( sub { push @headers, @_ } );
+    my @headers;
+    $headers->scan( sub { push @headers, @_ } );
 
-  return @headers;
+    return @headers;
 }
 
 1;
 
 __END__
- 
+
 =head1 NAME
- 
+
 Plack::App::Proxy - proxy requests
- 
+
 =head1 SYNOPSIS
- 
+
   use Plack::Builder;
- 
+
   builder {
       # proxy all requests to 127.0.0.1:80
       mount "/static" => Plack::App::Proxy->new(host => "http://127.0.0.1:80")->to_app;
-      
+
       # use some logic to decide which host to proxy to
       mount "/host" => Plack::App::Proxy->new(host => sub {
         my $env = shift;
         ...
         return $host;
       })->to_app;
-      
+
       # use some logic to decide what url to proxy
       mount "/url" => Plack::App::Proxy->new(url => sub {
         my $env => shift;
@@ -152,20 +153,24 @@ Plack::App::Proxy - proxy requests
   };
 
 =head1 DESCRIPTION
- 
+
 Plack::App::Proxy
- 
+
 =head1 AUTHOR
  
 Lee Aylward
- 
+
+Masahiro Honma
+
+Tatsuhiko Miyagawa
+
 =head1 LICENSE
- 
+
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
- 
+
 =head1 SEE ALSO
- 
+
 L<Plack::Builder>
- 
+
 =cut
