@@ -35,9 +35,11 @@ sub filter_headers {
 sub build_url_from_env {
     my($self, $env) = @_;
 
-    if (ref $self->url eq 'CODE') {
-        return $self->url->($env);
-    }
+    return $env->{'plack.proxy.url'}
+        if exists $env->{'plack.proxy.url'};
+
+    return $self->url->($env)
+        if ref $self->url eq 'CODE';
 
     my $url = ref $self->host eq 'CODE' ? $self->host->($env) : $self->host
         or die "Neither proxy host nor URL are configured";
@@ -50,6 +52,21 @@ sub build_url_from_env {
     return $url;
 }
 
+sub build_headers_from_env {
+    my($self, $env, $req) = @_;
+
+    return $env->{'plack.proxy.headers'}
+        if exists $env->{'plack.proxy.headers'};
+
+    my $headers = $req->headers->clone;
+    $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
+    $headers->remove_header("Host") unless $self->preserve_host_header;
+    $self->filter_headers( $headers );
+
+    # Just assume HTTP::Headers is a blessed hash ref
+    +{%$headers};
+}
+
 sub call {
     my ($self, $env) = @_;
 
@@ -57,25 +74,22 @@ sub call {
         die "Plack::App::Proxy only runs with the server with psgi.streaming support";
     }
 
-    my $req = Plack::Request->new($env);
-
     my $url = $self->build_url_from_env($env);
 
     # HACK: allow url/host callback to return PSGI response array ref
     return $url if ref $url eq "ARRAY";
 
-    my $headers = $req->headers->clone;
-    $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
-    $headers->remove_header("Host") unless $self->preserve_host_header;
-    $self->filter_headers( $headers );
+    my $req = Plack::Request->new($env);
+    my $headers = $self->build_headers_from_env($env, $req);
 
-    my $content = $req->content;
+    my $method  = $env->{'plack.proxy.method'}  || $env->{REQUEST_METHOD};
+    my $content = $env->{'plack.proxy.content'} || $req->content;
 
     return sub {
         my $respond = shift;
         my $cv = AE::cv;
         AnyEvent::HTTP::http_request(
-            $env->{REQUEST_METHOD} => $url,
+            $method => $url,
             headers => $headers,
             body => $content,
             want_body_handle => 1,
