@@ -53,9 +53,6 @@ sub build_url_from_env {
 sub build_headers_from_env {
     my($self, $env, $req) = @_;
 
-    return $env->{'plack.proxy.headers'}
-        if exists $env->{'plack.proxy.headers'};
-
     my $headers = $req->headers->clone;
     $headers->header("X-Forwarded-For" => $env->{REMOTE_ADDR});
     $headers->remove_header("Host") unless $self->preserve_host_header;
@@ -75,11 +72,12 @@ sub call {
     my $url = $self->build_url_from_env($env)
         or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
 
+    # TODO: make sure Plack::Request recalculates psgi.input when it's reset
     my $req = Plack::Request->new($env);
     my $headers = $self->build_headers_from_env($env, $req);
 
-    my $method  = $env->{'plack.proxy.method'}  || $env->{REQUEST_METHOD};
-    my $content = $env->{'plack.proxy.content'} || $req->content;
+    my $method  = $env->{REQUEST_METHOD};
+    my $content = $req->content;
 
     return sub {
         my $respond = shift;
@@ -214,18 +212,6 @@ Overrides the proxy request URL.
 =item plack.proxy.remote
 
 Overrides the base URL path to proxy to.
-
-=item plack.proxy.method
-
-Overrides the request method (GET/POST etc.)
-
-=item plack.proxy.headers
-
-Overrides the request headers (as a hash reference)
-
-=item plack.proxy.content
-
-Overrides the request body (as a string).
 
 =back
 
