@@ -2,7 +2,7 @@ package Plack::App::Proxy;
 
 use strict;
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/host remote preserve_host_header/;
+use Plack::Util::Accessor qw/remote preserve_host_header/;
 use Plack::Request;
 use HTTP::Headers;
 use Try::Tiny;
@@ -38,7 +38,7 @@ sub build_url_from_env {
     return $env->{'plack.proxy.url'}
         if exists $env->{'plack.proxy.url'};
 
-    my $url = $env->{'plack.proxy.remote'} || $self->remote || $self->host
+    my $url = $env->{'plack.proxy.remote'} || $self->remote
         or return;
 
     # avoid double slashes
