@@ -38,7 +38,7 @@ sub build_url_from_env {
     return $env->{'plack.proxy.url'}
         if exists $env->{'plack.proxy.url'};
 
-    my $url = $env->{'plack.proxy.base'} || $self->remote || $self->host
+    my $url = $env->{'plack.proxy.remote'} || $self->remote || $self->host
         or return;
 
     $url .= $env->{PATH_INFO} || '';

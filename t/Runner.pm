@@ -77,7 +77,7 @@ sub run_tests {
             # Host callback returns forbidden response instead of host
             return [ 403, [], [ "forbidden" ] ]
                 if $env->{PATH_INFO} =~ m(^/secret);
-            $env->{'plack.proxy.base'} = 'http://' . $env->{HTTP_HOST};
+            $env->{'plack.proxy.remote'} = 'http://' . $env->{HTTP_HOST};
             $app->($env);
         };
       },
