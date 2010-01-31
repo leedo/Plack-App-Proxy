@@ -150,20 +150,13 @@ Plack::App::Proxy - proxy requests
       mount "/static" => Plack::App::Proxy->new(remote => "http://127.0.0.1:80")->to_app;
   };
 
-  # Use middleware to modify requests
-  my $mw = sub {
-      my $app = shift;
-      sub {
-          my $env = shift;
-          ...
-          $env->{'plack.proxy.url'} = $url;
-          $app->($env);
-      };
-  };
-
-  builder {
-      enable $mw;
-      Plack::App::Proxy->new->to_app;
+  # Call from other app
+  my $proxy = Plack::App::Proxy->new->to_app;
+  my $app = sub {
+      my $env = shift;
+      ...
+      $env->{'plack.proxy.url'} = $url;
+      $proxy->($env);
   };
 
 =head1 DESCRIPTION
