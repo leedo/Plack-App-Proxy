@@ -41,6 +41,9 @@ sub build_url_from_env {
     my $url = $env->{'plack.proxy.remote'} || $self->remote || $self->host
         or return;
 
+    # avoid double slashes
+    $url =~ s!/$!! unless $env->{SCRIPT_NAME} && $env->{SCRIPT_NAME} =~ m!/$!;
+
     $url .= $env->{PATH_INFO} || '';
     $url .= '?' . $env->{QUERY_STRING} if defined $env->{QUERY_STRING} && length $env->{QUERY_STRING} > 0;
 

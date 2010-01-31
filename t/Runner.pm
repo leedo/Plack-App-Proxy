@@ -166,6 +166,23 @@ sub run_tests {
       is $res->content, 'HELLO';
     },
   );
+
+  # avoid double slashes
+  test_proxy(
+    proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]/") },
+    app   => sub {
+      my $env = shift;
+      return [ 200, [], [ $env->{PATH_INFO} ] ];
+    },
+    client => sub {
+      my $cb = shift;
+      my $req = HTTP::Request->new(
+        GET => "http://localhost/foo",
+      );
+      my $res = $cb->($req);
+      is $res->content, '/foo';
+    },
+  );
 }
 
 1;
