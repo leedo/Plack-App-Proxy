@@ -180,7 +180,7 @@ Plack::App::Proxy is a middleware-aware proxy application for Plack.
 
   Plack::App::Proxy->new(remote => 'http://perl.org')->to_app;
 
-Specifies the remote proxy base URL.
+Specifies the base remote URL to proxy requests to.
 
   builder {
       mount "/example",
