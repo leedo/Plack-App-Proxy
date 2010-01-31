@@ -11,7 +11,7 @@ use t::Runner;
 
 # Receive the encoded contents.
 test_proxy(
-  proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]/") },
+  proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]/") },
   app   => Plack::Middleware::Deflater->wrap(
     # XXX Plack 0.9030 can't deflate an array-ref response.
     sub { [ 200, [], io_from_array [ 'Hello ', 'World', "\n" ] ] },
