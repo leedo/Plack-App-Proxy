@@ -48,7 +48,7 @@ sub run_tests {
 
   # regular static proxy
   test_proxy(
-    proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]") },
+    proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]") },
     app   => sub {
       my $env = shift;
       is $env->{PATH_INFO}, '/index.html', 'PATH_INFO accessed';
@@ -70,15 +70,16 @@ sub run_tests {
       proxy => sub {
         # save the app's host and port for client.
         ( $app_host, $app_port ) = @_;
-        Plack::App::Proxy->new( host => sub {
-          my $env = shift;
 
-          # Host callback returns forbidden response instead of host
-          return [ 403, [], [ "forbidden" ] ] 
-                                           if $env->{PATH_INFO} =~ m(^/secret);
-
-          return 'http://' . $env->{HTTP_HOST};
-        } );
+        my $app = Plack::App::Proxy->new->to_app;
+        sub {
+            my $env = shift;
+            # Host callback returns forbidden response instead of host
+            return [ 403, [], [ "forbidden" ] ]
+                if $env->{PATH_INFO} =~ m(^/secret);
+            $env->{'plack.proxy.base'} = 'http://' . $env->{HTTP_HOST};
+            $app->($env);
+        };
       },
       app   => sub { [ 200, [], ["WORLD"] ] },
       client => sub {
@@ -100,7 +101,7 @@ sub run_tests {
   # Don't rewrite the Host header
   test_proxy(
     proxy => sub { Plack::App::Proxy->new(
-      host => "http://$_[0]:$_[1]", preserve_host_header => 1,
+      remote => "http://$_[0]:$_[1]", preserve_host_header => 1,
     ) },
     app    => sub {
       my $env = shift;
@@ -116,21 +117,21 @@ sub run_tests {
     },
   );
 
-  # Get the full URL from a callback. This example is an open proxy, don't do this!
+  # Get the full URL from a middleware. This example is an open proxy, don't do this!
   {
     my ( $app_host, $app_port );
     test_proxy(
       proxy => sub {
         # save the app's host and port for client.
         ( $app_host, $app_port ) = @_;
-        Plack::App::Proxy->new( url => sub {
+        my $app = Plack::App::Proxy->new->to_app;
+        sub {
           my $env = shift;
-
           my ( $url ) = ( $env->{PATH_INFO} =~ m(^\/(https?://.*)) )
-                                        or return [ 403, [], [ "forbidden" ] ];
-
-          return $url;
-        } );
+              or return [ 403, [], [ "forbidden" ] ];
+          $env->{'plack.proxy.url'} = $url;
+          $app->($env);
+        };
       },
       app   => sub { [ 200, [], ["HELLO"] ] },
       client => sub {
@@ -150,7 +151,7 @@ sub run_tests {
 
   # with QUERY_STRING
   test_proxy(
-    proxy => sub { Plack::App::Proxy->new(host => "http://$_[0]:$_[1]") },
+    proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]") },
     app   => sub {
       my $env = shift;
       is $env->{QUERY_STRING}, 'k1=v1&k2=v2';

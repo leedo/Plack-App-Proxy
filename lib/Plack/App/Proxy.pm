@@ -2,7 +2,7 @@ package Plack::App::Proxy;
 
 use strict;
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/host url preserve_host_header/;
+use Plack::Util::Accessor qw/host remote preserve_host_header/;
 use Plack::Request;
 use HTTP::Headers;
 use Try::Tiny;
@@ -38,17 +38,11 @@ sub build_url_from_env {
     return $env->{'plack.proxy.url'}
         if exists $env->{'plack.proxy.url'};
 
-    return $self->url->($env)
-        if ref $self->url eq 'CODE';
+    my $url = $env->{'plack.proxy.base'} || $self->remote || $self->host
+        or return;
 
-    my $url = $env->{'plack.proxy.host'}
-        || (ref $self->host eq 'CODE' ? $self->host->($env) : $self->host)
-        or die "Neither proxy host nor URL are configured";
-
-    unless (ref $url eq 'ARRAY') {
-        $url .= $env->{PATH_INFO} || '';
-        $url .= '?' . $env->{QUERY_STRING} if defined $env->{QUERY_STRING} && length $env->{QUERY_STRING} > 0;
-    }
+    $url .= $env->{PATH_INFO} || '';
+    $url .= '?' . $env->{QUERY_STRING} if defined $env->{QUERY_STRING} && length $env->{QUERY_STRING} > 0;
 
     return $url;
 }
@@ -75,10 +69,8 @@ sub call {
         die "Plack::App::Proxy only runs with the server with psgi.streaming support";
     }
 
-    my $url = $self->build_url_from_env($env);
-
-    # HACK: allow url/host callback to return PSGI response array ref
-    return $url if ref $url eq "ARRAY";
+    my $url = $self->build_url_from_env($env)
+        or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
 
     my $req = Plack::Request->new($env);
     my $headers = $self->build_headers_from_env($env, $req);
@@ -154,7 +146,7 @@ Plack::App::Proxy - proxy requests
 
   # proxy all requests for /static to 127.0.0.1:80
   builder {
-      mount "/static" => Plack::App::Proxy->new(host => "http://127.0.0.1:80")->to_app;
+      mount "/static" => Plack::App::Proxy->new(remote => "http://127.0.0.1:80")->to_app;
   };
 
   # Use middleware to modify requests
@@ -181,19 +173,18 @@ Plack::App::Proxy is a middleware-aware proxy application for Plack.
 
 =over 4
 
-=item host
+=item remote
 
-  Plack::App::Proxy->new(host => 'http://perl.org/')->to_app;
+  Plack::App::Proxy->new(remote => 'http://perl.org')->to_app;
 
-Specifies the remote proxy host. Don't be tricked by the name 'host',
-since you can also include the URL path as well.
+Specifies the remote proxy base URL.
 
   builder {
       mount "/example",
-          Plack::App::Proxy->new(host => 'http://example.com/app/foo')->to_app;
+          Plack::App::Proxy->new(remote => 'http://example.com/app/foo')->to_app;
   };
 
-This makes the request for C</example/bar> proxied to
+This proxies incoming requests for C</example/bar> proxied to
 C<http://example.com/app/foo/bar>.
 
 =head1 preserve_host_header
@@ -217,7 +208,7 @@ It also supports the following special environment variables:
 
 Overrides the proxy request URL.
 
-=item plack.proxy.host
+=item plack.proxy.remote
 
 Overrides the base URL path to proxy to.
 
@@ -236,15 +227,14 @@ Overrides the request body (as a string).
 =back
 
 For example, the following builder code allows you to proxy all GET
-requests to the lolcat image when UNIX epoch time can be multiplied by
-12 (yes, i know it's a silly example) but proxies to the internal host
-otherwise.
+requests for .png paths to the lolcat image (yes, a silly example) but
+proxies to the internal host otherwise.
 
   my $mw = sub {
       my $app = shift;
       sub {
           my $env = shift;
-          if ($env->{REQUEST_METHOD} eq 'GET' && time % 12 == 0) {
+          if ($env->{REQUEST_METHOD} eq 'GET' && $env->{PATH_INFO} =~ /\.png$/) {
               $env->{'plack.proxy.url'} = 'http://lolcat.example.com/lol.png';
           }
           $app->($env);
@@ -255,7 +245,7 @@ otherwise.
 
   builder {
       enable $mw;
-      Plack::App::Proxy->new(host => 'http://10.0.0.1:8080')->to_app;
+      Plack::App::Proxy->new(remote => 'http://10.0.0.1:8080')->to_app;
   };
 
 =head1 AUTHOR
