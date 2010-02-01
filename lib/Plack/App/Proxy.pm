@@ -69,52 +69,70 @@ sub call {
         die "Plack::App::Proxy only runs with the server with psgi.streaming support";
     }
 
-    my $url = $self->build_url_from_env($env)
-        or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
-
-    # TODO: make sure Plack::Request recalculates psgi.input when it's reset
-    my $req = Plack::Request->new($env);
-    my $headers = $self->build_headers_from_env($env, $req);
-
-    my $method  = $env->{REQUEST_METHOD};
-    my $content = $req->content;
-
     return sub {
         my $respond = shift;
         my $cv = AE::cv;
-        AnyEvent::HTTP::http_request(
-            $method => $url,
-            headers => $headers,
-            body => $content,
-            want_body_handle => 1,
-            sub {
-                my ($handle, $headers) = @_;
-                if (!$handle or $headers->{Status} =~ /^59\d+/) {
-                    $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
-                }
-                else {
-                    my $writer = $respond->([
-                        $headers->{Status},
-                        [$self->response_headers($headers)],
-                    ]);
+
+        my $requester; $requester = sub {
+            my $env = shift;
+            my $url = $self->build_url_from_env($env)
+                or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
+
+            # TODO: make sure Plack::Request recalculates psgi.input when it's reset
+            my $req = Plack::Request->new($env);
+            my $headers = $self->build_headers_from_env($env, $req);
+
+            my $method  = $env->{REQUEST_METHOD};
+            my $content = $req->content;
+
+            AnyEvent::HTTP::http_request(
+                $method => $url,
+                headers => $headers,
+                body => $content,
+                want_body_handle => 1,
+                sub {
+                    my ($handle, $headers) = @_;
+                    if (!$handle or $headers->{Status} =~ /^59\d+/) {
+                        $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
+                        undef $respond;
+                        return;
+                    }
+
+                    my $e;
+                    my $writer = try {
+                        $respond->([
+                            $headers->{Status},
+                            [$self->response_headers($headers)],
+                        ]);
+                    } catch {
+                        $e = $_;
+                    };
+
+                    if ($e =~ /Recurse/) {
+                        undef $handle;
+                        return $requester->($env);
+                    }
+
                     $handle->on_eof(sub {
                         $handle->destroy;
                         $writer->close;
                         $cv->send;
                         undef $handle;  # free the cyclic reference.
                     });
+
                     $handle->on_error(sub{});
                     $handle->on_read(sub {
                         my $data = delete $_[0]->{rbuf};
                         $writer->write($data) if defined $data;
                     });
-                }
 
-                # Free the reference manually for perl 5.8.x
-                # to avoid nested closure memory leaks.
-                undef $respond;
-            }
-        );
+                    # Free the reference manually for perl 5.8.x
+                    # to avoid nested closure memory leaks.
+                    undef $respond;
+                }
+            );
+        };
+        $requester->($env);
         $cv->recv unless $env->{"psgi.nonblocking"};
     }
 }
