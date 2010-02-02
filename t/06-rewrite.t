@@ -6,11 +6,7 @@ use Test::More;
 use LWP::UserAgent;
 use t::Runner;
 
-my $ua = LWP::UserAgent->new;
-$ua->max_redirect(0);
-
 test_proxy(
-  ua => $ua,
   proxy => sub {
       Plack::Middleware::Proxy::RewriteLocation->wrap(
           Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]/"),
