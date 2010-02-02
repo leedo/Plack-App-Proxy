@@ -71,6 +71,7 @@ sub call {
 
     my $url = $self->build_url_from_env($env)
         or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
+    $env->{'plack.proxy.last_url'} = $url;
 
     # TODO: make sure Plack::Request recalculates psgi.input when it's reset
     my $req = Plack::Request->new($env);

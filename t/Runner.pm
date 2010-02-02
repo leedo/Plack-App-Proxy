@@ -39,7 +39,7 @@ sub test_proxy {
       local $ENV{PLACK_SERVER} = 'Standalone';
 
       my $server = Plack::Loader->auto(port => $port, host => $host);
-      $server->run( $app );
+      $server->run($app);
     },
   );
 }
