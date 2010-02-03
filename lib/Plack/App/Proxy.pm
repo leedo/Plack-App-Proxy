@@ -71,7 +71,6 @@ sub call {
 
     my $url = $self->build_url_from_env($env)
         or return [502, ["Content-Type","text/html"], ["Can't determine proxy remote URL"]];
-    $env->{'plack.proxy.last_url'} = $url;
 
     # TODO: make sure Plack::Request recalculates psgi.input when it's reset
     my $req = Plack::Request->new($env);
@@ -91,6 +90,12 @@ sub call {
             want_body_handle => 1,
             sub {
                 my ($handle, $headers) = @_;
+
+                $env->{'plack.proxy.last_protocol'} = $headers->{HTTPVersion};
+                $env->{'plack.proxy.last_status'}   = $headers->{Status};
+                $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
+                $env->{'plack.proxy.last_url'}      = $headers->{URL};
+
                 if (! defined $handle or $headers->{Status} =~ /^59\d+/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
                 }
