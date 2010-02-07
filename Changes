@@ -1,5 +1,14 @@
 Revision history for Plack-App-Proxy
 
+0.11
+        - INCOMPATIBLE: the config option 'host' is now renamed to 'remote'
+        - Made sure the code forward compatible with Plack 1.0
+        - Added a PSGI environment vars support to write middleware
+        - callback options for url/host is deprecated. See the docs how to do
+          that using middleware
+        - Fixed a bug where Location header was rewritten
+        - Added RewriteLocation and AddVia middleware components
+
 0.10    01/29/2010
         Fixed the bug which drops QUERY_STRING from the original request.
         Enabled the Set-Cookies headers in the response.
