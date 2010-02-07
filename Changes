@@ -1,28 +1,28 @@
 Revision history for Plack-App-Proxy
 
-0.10    01/29/2009
+0.10    01/29/2010
         Fixed the bug which drops QUERY_STRING from the original request.
         Enabled the Set-Cookies headers in the response.
         (Any other headers are also enabled. See RFC 2616.)
 
-0.09    01/13/2009
+0.09    01/13/2010
         The tests no longer depend on the Google site.
 
-0.08    01/09/2009
+0.08    01/09/2010
         Fixed memory leaks for perl 5.8.x.
         Added more tests.
 
-0.07    01/05/2009
+0.07    01/05/2010
         Only use AnyEvent::HTTP for both blocking and non-blocking
         servers
 
-0.06    01/04/2009
+0.06    01/04/2010
         Fixed typo in MANIFEST.SKIP
 
-0.05    01/04/2009
+0.05    01/04/2010
         Re-upload with missing changes
 
-0.04    01/04/2009
+0.04    01/04/2010
         Added gzip support (hiratara)
         AnyEvent::HTTP fixes (hiratara)
 
