@@ -1,6 +1,6 @@
 Revision history for Plack-App-Proxy
 
-0.11
+0.11    02/08/2010
         - INCOMPATIBLE: the config option 'host' is now renamed to 'remote'
         - Made sure the code forward compatible with Plack 1.0
         - Added a PSGI environment vars support to write middleware
