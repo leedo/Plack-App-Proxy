@@ -35,9 +35,9 @@ OPTIONS
         This proxies incoming requests for "/example/bar" proxied to
         "http://example.com/app/foo/bar".
 
-preserve_host_header
-    Preserves the original Host header, which is useful when you do reverse
-    proxying to the internal hosts.
+    preserve_host_header
+        Preserves the original Host header, which is useful when you do
+        reverse proxying to the internal hosts.
 
 MIDDLEWARE CONFIGURATIONS
     This application is just like a normal PSGI application and is
@@ -87,14 +87,4 @@ LICENSE
 
 SEE ALSO
     Plack::Builder
-
-POD ERRORS
-    Hey! The above document had some coding errors, which are explained
-    below:
-
-    Around line 198:
-        You forgot a '=back' before '=head1'
-
-    Around line 203:
-        =back without =over
 

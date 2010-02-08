@@ -195,7 +195,7 @@ Specifies the base remote URL to proxy requests to.
 This proxies incoming requests for C</example/bar> proxied to
 C<http://example.com/app/foo/bar>.
 
-=head1 preserve_host_header
+=item preserve_host_header
 
 Preserves the original Host header, which is useful when you do
 reverse proxying to the internal hosts.
