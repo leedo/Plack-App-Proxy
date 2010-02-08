@@ -8,7 +8,7 @@ use HTTP::Headers;
 use Try::Tiny;
 use AnyEvent::HTTP;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 # hop-by-hop headers (see also RFC2616)
 my @hop_by_hop = qw(
