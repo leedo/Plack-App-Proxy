@@ -3,31 +3,83 @@ NAME
 
 SYNOPSIS
       use Plack::Builder;
- 
+
+      # proxy all requests for /static to 127.0.0.1:80
       builder {
-          # proxy all requests to 127.0.0.1:80
-          mount "/static" => Plack::App::Proxy->new(host => "http://127.0.0.1:80")->to_app;
-      
-          # use some logic to decide which host to proxy to
-          mount "/host" => Plack::App::Proxy->new(host => sub {
-            my $env = shift;
-            ...
-            return $host;
-          })->to_app;
-      
-          # use some logic to decide what url to proxy
-          mount "/url" => Plack::App::Proxy->new(url => sub {
-            my $env => shift;
-            ...
-            return $url;
-          })->to_app;
+          mount "/static" => Plack::App::Proxy->new(remote => "http://127.0.0.1:80")->to_app;
+      };
+
+      # Call from other app
+      my $proxy = Plack::App::Proxy->new->to_app;
+      my $app = sub {
+          my $env = shift;
+          ...
+          $env->{'plack.proxy.url'} = $url;
+          $proxy->($env);
       };
 
 DESCRIPTION
-    Plack::App::Proxy
+    Plack::App::Proxy is a middleware-aware proxy application for Plack.
+
+OPTIONS
+    remote
+          Plack::App::Proxy->new(remote => 'http://perl.org')->to_app;
+
+        Specifies the base remote URL to proxy requests to.
+
+          builder {
+              mount "/example",
+                  Plack::App::Proxy->new(remote => 'http://example.com/app/foo')->to_app;
+          };
+
+        This proxies incoming requests for "/example/bar" proxied to
+        "http://example.com/app/foo/bar".
+
+preserve_host_header
+    Preserves the original Host header, which is useful when you do reverse
+    proxying to the internal hosts.
+
+MIDDLEWARE CONFIGURATIONS
+    This application is just like a normal PSGI application and is
+    middleware aware, which means you can modify proxy requests (and
+    responses) using Plack middleware stack.
+
+    It also supports the following special environment variables:
+
+    plack.proxy.url
+        Overrides the proxy request URL.
+
+    plack.proxy.remote
+        Overrides the base URL path to proxy to.
+
+    For example, the following builder code allows you to proxy all GET
+    requests for .png paths to the lolcat image (yes, a silly example) but
+    proxies to the internal host otherwise.
+
+      my $mw = sub {
+          my $app = shift;
+          sub {
+              my $env = shift;
+              if ($env->{REQUEST_METHOD} eq 'GET' && $env->{PATH_INFO} =~ /\.png$/) {
+                  $env->{'plack.proxy.url'} = 'http://lolcat.example.com/lol.png';
+              }
+              $app->($env);
+          };
+      };
+
+      use Plack::Builder;
+
+      builder {
+          enable $mw;
+          Plack::App::Proxy->new(remote => 'http://10.0.0.1:8080')->to_app;
+      };
 
 AUTHOR
     Lee Aylward
+
+    Masahiro Honma
+
+    Tatsuhiko Miyagawa
 
 LICENSE
     This library is free software; you can redistribute it and/or modify it
@@ -35,4 +87,14 @@ LICENSE
 
 SEE ALSO
     Plack::Builder
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 198:
+        You forgot a '=back' before '=head1'
+
+    Around line 203:
+        =back without =over
 
