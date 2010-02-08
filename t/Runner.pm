@@ -15,6 +15,7 @@ sub test_proxy {
   my %args = @_;
 
   local $Plack::Test::Impl = 'Server';
+  local $ENV{PLACK_SERVER} = $ENV{PLACK_SERVER} || 'Standalone';
 
   my $client = delete $args{client} or croak "client test code needed";
   my $app    = delete $args{app}    or croak "app needed";
