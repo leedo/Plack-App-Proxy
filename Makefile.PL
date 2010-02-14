@@ -4,6 +4,8 @@ all_from 'lib/Plack/App/Proxy.pm';
 readme_from 'lib/Plack/App/Proxy.pm';
 test_requires 'Test::More' => '0.88';  # for done_testing()
 test_requires 'Test::Requires';
+test_requires 'Test::TCP';
+test_requires 'IO::Socket::INET';
 requires 'Plack' => 0.9028; # for psgi.streaming in blocking servers
 requires 'Plack::Request';
 requires 'HTTP::Headers';
