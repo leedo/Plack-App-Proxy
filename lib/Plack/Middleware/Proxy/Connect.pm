@@ -4,6 +4,7 @@ use warnings;
 use parent 'Plack::Middleware';
 
 use AnyEvent::Socket;
+use AnyEvent::Handle;
 
 our $VERSION = '0.01';
 
@@ -19,10 +20,14 @@ sub call {
     sub {
         my $respond = shift;
 
+        # Run the loop by myself when psgi.nonblocking is turend off.
+        my $cv = $env->{'psgi.nonblocking'} ? undef : AE::cv;
+
         tcp_connect $host, $port, sub {
             my ( $origin_fh ) = @_;
             unless( $origin_fh ){
                 $respond->( [ 502, [], ['Bad Gateway'] ] );
+                $cv->send if $cv;
                 return;
             }
 
@@ -43,6 +48,7 @@ sub call {
                 $origin_hdl->push_shutdown;
                 # Finish this request.
                 $writer->close;
+                $cv->send if $cv;
                 # Use $client_hdl to keep the handle by a cyclical reference.
                 $client_hdl->destroy;
             } );
@@ -60,6 +66,8 @@ sub call {
                 $origin_hdl->destroy;
             } );
         };
+
+        $cv->recv if $cv;
     };
 }
 

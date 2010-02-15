@@ -1,6 +1,5 @@
 use strict;
 use warnings;
-use Test::Requires 'Plack::Handler::Twiggy';
 use Test::More;
 use Test::TCP;
 use IO::Socket::INET;
@@ -23,7 +22,7 @@ test_tcp(
                 print $sock "CONNECT 127.0.0.1:$port_orig HTTP/1.0\015\012", 
                             "\015\012";
                 like scalar <$sock>, qr(^HTTP/1\.[01] 2\d\d );
-                is scalar <$sock>, "\015\012";
+                while(<$sock>){ /^\015\012$/ and last; }  # skip headers
 
                 # Send ping to the original server.
                 print $sock "PING\015\012";
@@ -53,9 +52,7 @@ test_tcp(
     },
     server => sub {
         my $port = shift;
-        my $server = Plack::Loader->load(
-            'Twiggy', port => $port, host => '127.0.0.1',
-        );
+        my $server = Plack::Loader->auto( port => $port, host => '127.0.0.1' );
         $server->run(
            Plack::Middleware::Proxy::Connect->wrap(
                 sub { [200, ['Content-Type' => 'plain/text'], ['Hi']] }
