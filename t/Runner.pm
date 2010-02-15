@@ -208,6 +208,48 @@ sub run_tests {
            "pass the Location header to the client directly";
     },
   );
+
+  # Don't freeze on servers without psgi.nonblocking supports.
+  test_proxy(
+    proxy => sub {
+      my $proxy = Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]");
+      sub {
+        my $env = shift;
+        if( $env->{PATH_INFO} eq '/error' ){
+          $env->{'plack.proxy.url'} = '!! BADURL to make AE::HTTP error!!' ;
+        }
+        return $proxy->( $env );
+      };
+    },
+    app   => sub {
+      my $env = shift;
+      if( $env->{PATH_INFO} eq '/redirect' ){
+        return [ 302, [ Location => 'http://d.hatena.ne.jp/hiratara' ], [] ];
+      }else{
+        return [ 200, [ 'Content-Type' => 'text/plain'], [ "HELLO" ] ];
+      }
+    },
+    client => sub {
+      my $cb = shift;
+      my $res;
+
+      $res = $cb->(
+        HTTP::Request->new( GET => "http://localhost/redirect" )
+      );
+      is $res->code, 302, 'Success the redirect request.';
+
+      $res = $cb->(
+        HTTP::Request->new( GET => "http://localhost/error" )
+      );
+      is $res->code, 502, 'Success the error request.';
+
+      $res = $cb->(
+        HTTP::Request->new( GET => "http://localhost/" )
+      );
+      is $res->code, 200, 'Success all requests.';
+    },
+  );
+
 }
 
 1;

@@ -98,6 +98,7 @@ sub call {
 
                 if (! defined $handle or $headers->{Status} =~ /^59\d+/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
+                    $cv->send;
                 }
                 elsif( $handle eq '' ) {
                     # The response didn't have a body.
@@ -105,6 +106,7 @@ sub call {
                         $headers->{Status}, 
                         [$self->response_headers($headers)], []
                     ] );
+                    $cv->send;
                 }
                 else {
                     my $writer = $respond->([
