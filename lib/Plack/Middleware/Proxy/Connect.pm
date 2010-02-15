@@ -82,7 +82,7 @@ Plack::Middleware::Proxy::Connect - Handles the CONNECT method.
           my $app = shift;
           return sub {
               my $env = shift;
-              ($env->{'plack.proxy.url'} = $env->{PATH_INFO}) =~ s|^/||;
+              ($env->{'plack.proxy.url'} = $env->{REQUEST_URI}) =~ s|^/||;
               $app->( $env );
           };
       };
