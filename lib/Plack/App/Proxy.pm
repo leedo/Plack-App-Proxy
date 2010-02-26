@@ -118,6 +118,9 @@ sub call {
                         $writer->close;
                         $cv->send;
                         undef $handle;  # free the cyclic reference.
+                        # http_request may not release $cb with perl 5.8.8
+                        # and AE::HTTP 1.44. So free $env manually.
+                        undef $env;
                     });
                     $handle->on_error(sub{});
                     $handle->on_read(sub {
