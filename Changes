@@ -1,5 +1,12 @@
 Revision history for Plack-App-Proxy
 
+0.13    02/27/2010
+        - Added Connect middleware component
+        - Fixed the problem that responses which status code isn't 200
+          caused freeze on blocking servers
+        - Fixed the leak of $env with perl 5.8.x
+        - Relocated test programs
+
 0.12    02/09/2010
         - Fixed the pod syntax
         - Had tests pass without Plack::Server::AnyEvent
