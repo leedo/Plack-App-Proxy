@@ -3,8 +3,8 @@ use warnings;
 use Plack::App::Proxy;
 use Plack::Middleware::Proxy::RewriteLocation;
 use Test::More;
+use Plack::App::Proxy::Test;
 use LWP::UserAgent;
-use t::Runner;
 
 test_proxy(
   proxy => sub {

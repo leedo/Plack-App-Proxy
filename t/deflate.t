@@ -7,7 +7,7 @@ use Test::Requires qw(
 use IO::Handle::Util qw(:io_from);
 use Plack::App::Proxy;
 use Test::More;
-use t::Runner;
+use Plack::App::Proxy::Test;
 
 # Receive the encoded contents.
 test_proxy(

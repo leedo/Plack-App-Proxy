@@ -3,7 +3,7 @@ use warnings;
 use Plack::App::Proxy;
 use Plack::Middleware::Proxy::AddVia;
 use Test::More;
-use t::Runner;
+use Plack::App::Proxy::Test;
 
 test_proxy(
     proxy => sub {

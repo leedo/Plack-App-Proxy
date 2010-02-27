@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use Plack::App::Proxy;
-use t::Runner;
+use Plack::App::Proxy::Test;
 
 # regular static proxy
 test_proxy(
