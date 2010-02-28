@@ -7,7 +7,6 @@ test_requires 'Test::Requires';
 test_requires 'Test::TCP';
 test_requires 'IO::Socket::INET';
 requires 'Plack' => '0.9913'; # for psgix.io supports.
-requires 'Plack::Request';
 requires 'HTTP::Headers';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
 tests 't/*.t t/*/*.t';
