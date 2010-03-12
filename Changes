@@ -1,5 +1,9 @@
 Revision history for Plack-App-Proxy
 
+0.14    03/12/2010
+        - Fixed META.yml broken (Thanks to miyagawa)
+        - Removed dependencies on Plack-Request
+
 0.13    02/27/2010
         - Added Connect middleware component
         - Fixed the problem that responses which status code isn't 200
