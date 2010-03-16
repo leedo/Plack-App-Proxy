@@ -82,7 +82,7 @@ sub call {
     return sub {
         my $respond = shift;
         my $cv = AE::cv;
-        AnyEvent::HTTP::http_request(
+        my $request; $request = AnyEvent::HTTP::http_request(
             $method => $url,
             headers => $headers,
             body => $content,
@@ -125,7 +125,16 @@ sub call {
                     $handle->on_error(sub{});
                     $handle->on_read(sub {
                         my $data = delete $_[0]->{rbuf};
-                        $writer->write($data) if defined $data;
+                        try {
+                          $writer->write($data) if defined $data;
+                        } catch {
+                          $handle->destroy;
+                          $writer->close;
+                          $cv->send;
+                          undef $handle;
+                          undef $env;
+                          undef $request; # cancel the proxied request
+                        };
                     });
                 }
 
