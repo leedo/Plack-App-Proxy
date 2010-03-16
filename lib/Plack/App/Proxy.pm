@@ -128,12 +128,15 @@ sub call {
                         try {
                           $writer->write($data) if defined $data;
                         } catch {
-                          $handle->destroy;
-                          $writer->close;
-                          $cv->send;
-                          undef $handle;
-                          undef $env;
-                          undef $request; # cancel the proxied request
+                          if (/Broken pipe/) {
+                            $handle->destroy;
+                            $writer->close;
+                            $cv->send;
+                            undef $handle;
+                            undef $env;
+                            undef $request; # cancel the proxied request
+                          }
+                          die $_;
                         };
                     });
                 }
