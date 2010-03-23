@@ -27,7 +27,6 @@ sub select_backend {
 
 sub call {
     my ( $self, $env ) = @_;
-    my $url = $self->select_backend();
     $env->{'plack.proxy.remote'} = $self->select_backend;
     $self->app->($env);
 }
