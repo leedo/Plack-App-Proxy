@@ -40,7 +40,7 @@ Plack::Middleware::Proxy::RewriteLocation - Rewrites redirect headers
 
   builder {
       enable "Proxy::RewriteLocation";
-      Plack::App::Proxy->new(host => "http://10.0.1.2:8080/")->to_app;
+      Plack::App::Proxy->new(remote => "http://10.0.1.2:8080/")->to_app;
   };
 
 =head1 DESCRIPTION
