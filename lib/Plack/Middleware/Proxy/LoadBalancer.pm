@@ -45,7 +45,7 @@ Plack::Middleware::Proxy::LoadBalancer - Simple load balancer
   use Plack::App::Proxy;
 
   builder {
-    enable "Proxy::LoadBalancer", backends => ['10.0.0.1:8080', '10.0.0.1:8081'];
+    enable "Proxy::LoadBalancer", backends => ['http://10.0.0.1:8080', 'http://10.0.0.1:8081'];
     Plack::App::Proxy->new()->to_app;
   };
 
@@ -59,15 +59,15 @@ Plack::Middleware::Proxy::LoadBalancer allow you to define several backends.
 
 =item backends
 
-  enable "Proxy::LoadBalancer", backends => '10.0.0.1:8080';
+  enable "Proxy::LoadBalancer", backends => 'http://10.0.0.1:8080';
 
 Or
 
-  enable "Proxy::LoadBalancer", backends => ['10.0.0.1:8080', '10.0.0.1:8081'];
+  enable "Proxy::LoadBalancer", backends => ['http://10.0.0.1:8080', 'http://10.0.0.1:8081'];
 
 Or
 
-  enable "Proxy::LoadBalancer", backends => {'10.0.0.1:8080' => 0.4, '10.0.0.1:8081' => 0.5, '10.0.0.1:8002' => 0.3};
+  enable "Proxy::LoadBalancer", backends => {'http://10.0.0.1:8080' => 0.4, 'http://10.0.0.1:8081' => 0.5, 'http://10.0.0.1:8002' => 0.3};
 
 More than one backend can be defined. Weight can be given to backends.
 
