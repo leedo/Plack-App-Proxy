@@ -1,5 +1,9 @@
 Revision history for Plack-App-Proxy
 
+0.15    03/26/2010
+        - Added the LoadBalancer middleware (franck cuny)
+        - Fixed SYNOPSIS of RewriteLocation (franck cuny)
+
 0.14    03/12/2010
         - Fixed META.yml broken (Thanks to miyagawa)
         - Removed dependencies on Plack-Request
