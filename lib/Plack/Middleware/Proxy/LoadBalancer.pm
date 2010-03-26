@@ -42,12 +42,15 @@ sub _set_backends{
 
 sub select_backend {
     my $self = shift;
+    my $rand = rand;
 
-    return (
-        sort { $b->{value} <=> $a->{value} }
-            map { { value => rand() * $_->{weight}, host => $_->{remote} }; }
-            @{ $self->backends }
-    )[0]->{host};
+    my $choice = undef;
+    for( @{ $self->backends } ){
+        $choice = $_->{remote};
+        ($rand -= $_->{weight}) <= 0 and last;
+    }
+
+    return $choice;
 }
 
 sub call {
