@@ -7,22 +7,47 @@ use Plack::Util::Accessor qw/backends/;
 
 our $VERSION = '0.01';
 
+sub new {
+    my $class = shift;
+    my %param = ref $_[0] ? %{ $_[0] } : @_;
+
+    my $backends = delete $param{backends};
+
+    my $self = $class->SUPER::new( \%param );
+    $self->_set_backends( $backends );
+
+    $self;
+}
+
+sub _set_backends{
+    my $self = shift;
+    my ( $backends ) = @_;
+
+    # A total of 'weight' should be 1.0
+    if( ref $backends eq 'ARRAY'){
+        my $weight = 1 / @$backends;
+        $self->backends([
+            map { {remote => $_, weight => $weight} } @$backends
+        ]);
+    }elsif( ref $backends eq 'HASH'){
+        my $total = 0;
+        $total += $_ for values %$backends;
+        $self->backends([ map { 
+            {remote => $_, weight => $backends->{$_} / $total}
+        } keys %$backends ]);
+    }else{
+        $self->backends([ { remote => $backends, weight => 1 } ]);
+    }
+}
+
 sub select_backend {
     my $self = shift;
 
-    if ( ref $self->backends eq 'ARRAY' ) {
-        return $self->backends->[ int( rand( @{ $self->backends } ) ) ];
-    }
-    elsif ( ref $self->backends eq 'HASH' ) {
-        return (
-            sort { $b->{value} <=> $a->{value} }
-                map { { value => rand() * $self->backends->{$_}, host => $_ }; }
-                keys %{ $self->backends }
-        )[0]->{host};
-    }
-    else {
-        return $self->backends;
-    }
+    return (
+        sort { $b->{value} <=> $a->{value} }
+            map { { value => rand() * $_->{weight}, host => $_->{remote} }; }
+            @{ $self->backends }
+    )[0]->{host};
 }
 
 sub call {
