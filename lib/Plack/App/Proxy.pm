@@ -99,6 +99,24 @@ sub call {
                 if (! defined $handle or $headers->{Status} =~ /^59\d+/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
                     $cv->send;
+                } 
+                elsif( $headers->{Status} =~ /^30[12]/ ) {
+                    # The response was a redirect
+                    # Let's try something like Apache's ProxyPassReverse
+                    my $location = URI->new($headers->{location})->canonical;
+                    my $remote   = URI->new($self->remote)->canonical;
+                    my $uri      = $req->base->canonical;
+
+                    if($location =~ s{^\Q$remote}{$uri}) {
+                        $headers->{location} = $location;
+                    }
+
+                    $respond->([
+                        $headers->{Status},
+                        [$self->response_headers($headers)],
+                        # I don't care about the body of redirects
+                        []
+                    ]);
                 }
                 elsif( $handle eq '' ) {
                     # The response didn't have a body.
