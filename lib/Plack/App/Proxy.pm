@@ -82,52 +82,44 @@ sub call {
     return sub {
         my $respond = shift;
         my $cv = AE::cv;
+        my $writer;
         AnyEvent::HTTP::http_request(
             $method => $url,
             headers => $headers,
             body => $content,
             recurse => 0,  # want not to treat any redirections
-            want_body_handle => 1,
+            on_body => sub {
+              my ($chunk, $headers) = @_;
+
+              if (!$writer) {
+                  $writer = $respond->([
+                      $headers->{Status},
+                      [$self->response_headers($headers)],
+                  ]);
+              }
+
+              $writer->write($chunk);
+
+              return 1;
+            },
             sub {
-                my ($handle, $headers) = @_;
+                my (undef, $headers) = @_;
 
                 $env->{'plack.proxy.last_protocol'} = $headers->{HTTPVersion};
                 $env->{'plack.proxy.last_status'}   = $headers->{Status};
                 $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
                 $env->{'plack.proxy.last_url'}      = $headers->{URL};
 
-                if (! defined $handle or $headers->{Status} =~ /^59\d+/) {
+                if ($headers->{Status} =~ /^59\d+/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
-                    $cv->send;
                 }
-                elsif( $handle eq '' ) {
-                    # The response didn't have a body.
-                    $respond->( [
-                        $headers->{Status}, 
-                        [$self->response_headers($headers)], []
-                    ] );
-                    $cv->send;
-                }
-                else {
-                    my $writer = $respond->([
-                        $headers->{Status},
-                        [$self->response_headers($headers)],
-                    ]);
-                    $handle->on_eof(sub {
-                        $handle->destroy;
-                        $writer->close;
-                        $cv->send;
-                        undef $handle;  # free the cyclic reference.
-                        # http_request may not release $cb with perl 5.8.8
-                        # and AE::HTTP 1.44. So free $env manually.
-                        undef $env;
-                    });
-                    $handle->on_error(sub{});
-                    $handle->on_read(sub {
-                        my $data = delete $_[0]->{rbuf};
-                        $writer->write($data) if defined $data;
-                    });
-                }
+
+                $writer->close if $writer;
+                $cv->send;
+
+                # http_request may not release $cb with perl 5.8.8
+                # and AE::HTTP 1.44. So free $env manually.
+                undef $env;
 
                 # Free the reference manually for perl 5.8.x
                 # to avoid nested closure memory leaks.
