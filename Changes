@@ -1,5 +1,9 @@
 Revision history for Plack-App-Proxy
 
+0.16    01/12/2010
+        - Rewrite proxy code to use AnyEvent::HTTP's on_body callback.
+          This gets chunked and gzipped responses working.
+
 0.15    03/26/2010
         - Added the LoadBalancer middleware (franck cuny)
         - Fixed SYNOPSIS of RewriteLocation (franck cuny)
