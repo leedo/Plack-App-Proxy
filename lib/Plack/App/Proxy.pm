@@ -88,18 +88,19 @@ sub call {
             headers => $headers,
             body => $content,
             recurse => 0,  # want not to treat any redirections
+            on_header => sub {
+                my $headers = shift;
+
+                if ($headers->{Status} !~ /^59\d+/) {
+                    $writer = $respond->([
+                        $headers->{Status},
+                        [$self->response_headers($headers)],
+                    ]);
+                }
+                return 1;
+            },
             on_body => sub {
-              my ($chunk, $headers) = @_;
-
-              if (!$writer) {
-                  $writer = $respond->([
-                      $headers->{Status},
-                      [$self->response_headers($headers)],
-                  ]);
-              }
-
-              $writer->write($chunk);
-
+              $writer->write($_[0]);
               return 1;
             },
             sub {
@@ -110,7 +111,7 @@ sub call {
                 $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
                 $env->{'plack.proxy.last_url'}      = $headers->{URL};
 
-                if ($headers->{Status} =~ /^59\d+/) {
+                if (!$writer and $headers->{Status} =~ /^59\d/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
                 }
 
