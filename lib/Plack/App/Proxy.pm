@@ -92,6 +92,11 @@ sub call {
                 my $headers = shift;
 
                 if ($headers->{Status} !~ /^59\d+/) {
+                    $env->{'plack.proxy.last_protocol'} = $headers->{HTTPVersion};
+                    $env->{'plack.proxy.last_status'}   = $headers->{Status};
+                    $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
+                    $env->{'plack.proxy.last_url'}      = $headers->{URL};
+
                     $writer = $respond->([
                         $headers->{Status},
                         [$self->response_headers($headers)],
@@ -105,11 +110,6 @@ sub call {
             },
             sub {
                 my (undef, $headers) = @_;
-
-                $env->{'plack.proxy.last_protocol'} = $headers->{HTTPVersion};
-                $env->{'plack.proxy.last_status'}   = $headers->{Status};
-                $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
-                $env->{'plack.proxy.last_url'}      = $headers->{URL};
 
                 if (!$writer and $headers->{Status} =~ /^59\d/) {
                     $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
