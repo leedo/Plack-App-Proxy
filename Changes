@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.17    01/19/2010
+        - Bump version to fix some CPAN issues
+
 0.16    01/12/2010
         - Rewrite proxy code to use AnyEvent::HTTP's on_body callback.
           This gets chunked and gzipped responses working.
