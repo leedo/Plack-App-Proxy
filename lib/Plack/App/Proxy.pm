@@ -5,7 +5,6 @@ use parent 'Plack::Component';
 use Plack::Util::Accessor qw/remote preserve_host_header/;
 use Plack::Request;
 use HTTP::Headers;
-use Try::Tiny;
 use AnyEvent::HTTP;
 
 our $VERSION = '0.17';
