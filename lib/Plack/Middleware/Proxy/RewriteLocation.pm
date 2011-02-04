@@ -26,6 +26,8 @@ sub call {
         my $respond = shift;
 
         my $cb = $self->app->($env);
+        return $respond->( $cb ) unless ref $cb eq 'CODE';
+
         $cb->(sub {
             my $res = shift;
 
