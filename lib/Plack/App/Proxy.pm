@@ -87,6 +87,7 @@ sub call {
             headers => $headers,
             body => $content,
             recurse => 0,  # want not to treat any redirections
+            persistent => 0,
             on_header => sub {
                 my $headers = shift;
 
