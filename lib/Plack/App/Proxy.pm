@@ -112,7 +112,7 @@ sub call {
                 my (undef, $headers) = @_;
 
                 if (!$writer and $headers->{Status} =~ /^59\d/) {
-                    $respond->([502, ["Content-Type","text/html"], ["Gateway error"]]);
+                    $respond->([502, ["Content-Type","text/html"], ["Gateway error: $headers->{Reason}"]]);
                 }
 
                 $writer->close if $writer;
