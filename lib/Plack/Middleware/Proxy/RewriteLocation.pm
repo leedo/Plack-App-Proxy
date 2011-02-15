@@ -6,6 +6,20 @@ use Plack::Util;
 use Plack::Util::Accessor 'url_map';
 use URI;
 
+sub _different_part($$) {
+    my ($from, $to) = @_;
+
+    while ($from =~ m{[^/]+(?:\://$|/$|$)}g) {
+        my $last_part = $&;
+        last unless $to =~ /\Q$last_part\E$/;
+
+        $from =~ s!\Q$last_part\E$!!;
+        $to   =~ s!\Q$last_part\E$!!;
+    }
+
+    $from => $to;
+}
+
 sub new {
     my $self = shift->SUPER::new( @_ );
 
@@ -40,15 +54,25 @@ sub call {
                     # non-canonically)
                     $location = $self->_regularize_url( $location );
 
-                    @map = @{$self->url_map};
+                    my $proxy = "$env->{'psgi.url_scheme'}://$env->{HTTP_HOST}";
+                    my @url_map = @{$self->url_map};
+
+                    while(my ($proxy_path, $remote) = splice @url_map, 0, 2) {
+                        push @map, "$proxy$proxy_path" => $remote;
+                    }
                 } else {
-                    @map = ('/' => ($env->{'plack.proxy.last_url'} =~ m!^(https?://[^/]*/)!)[0]);
+                    # Auto-guessing url_map
+                    my $original_url = "$env->{'psgi.url_scheme'}://" . 
+                                       "$env->{HTTP_HOST}$env->{REQUEST_URI}";
+                    $original_url .= '?' . $env->{QUERY_STRING}
+                        if defined $env->{QUERY_STRING} && $env->{QUERY_STRING};
+                    @map = _different_part(
+                        $original_url => $env->{'plack.proxy.last_url'}
+                    );
                 }
 
-                my $proxy = "$env->{'psgi.url_scheme'}://$env->{HTTP_HOST}";
-
-                while( my ( $proxy_path, $remote ) = splice @map, 0, 2 ) {
-                    last if $location =~ s!^$remote!$proxy$proxy_path!;
+                while(my ($proxy_url, $remote) = splice @map, 0, 2) {
+                    last if $location =~ s!^$remote!$proxy_url!;
                 }
 
                 $location =~ s!//$!/!; #< avoid double slashes
