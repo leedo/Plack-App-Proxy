@@ -33,16 +33,17 @@ sub call {
 
             if ( $env->{HTTP_HOST} and my $location = Plack::Util::header_get($res->[1], 'Location') ) {
 
-                # regularize the format of the location so we can
-                # compare it correctly (some apps print this
-                # non-canonically)
-                $location = $self->_regularize_url( $location );
+                my @map;
+                if ($self->url_map) {
+                    # regularize the format of the location so we can
+                    # compare it correctly (some apps print this
+                    # non-canonically)
+                    $location = $self->_regularize_url( $location );
 
-                my @map = (
-                    @{ $self->url_map || [] },
-                    # last-resort url mapping is just the root of the proxy
-                    '/' => ($env->{'plack.proxy.last_url'} =~ m!^(https?://[^/]*/)!)[0],
-                   );
+                    @map = @{$self->url_map};
+                } else {
+                    @map = ('/' => ($env->{'plack.proxy.last_url'} =~ m!^(https?://[^/]*/)!)[0]);
+                }
 
                 my $proxy = "$env->{'psgi.url_scheme'}://$env->{HTTP_HOST}";
 
