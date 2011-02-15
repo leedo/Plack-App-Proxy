@@ -88,6 +88,7 @@ sub call {
             body => $content,
             recurse => 0,  # want not to treat any redirections
             persistent => 0,
+            proxy => undef, # $ENV{http_proxy} causing test failures
             on_header => sub {
                 my $headers = shift;
 
