@@ -66,14 +66,14 @@ test_proxy(
 
       return [
           301,
-          [ "Location" => "http://$env->{HTTP_HOST}:80/noggin/redirect", "X-Server-Port" => $env->{SERVER_PORT} ],
+          [ "Location" => "http://$env->{HTTP_HOST}/noggin/redirect", "X-Server-Port" => $env->{SERVER_PORT} ],
           [ 'Redirected' ],
          ];
     },
   client => sub {
       my $cb = shift;
 
-      my $res = $cb->( HTTP::Request->new( GET => "http://localhost:80/foo" ) );
+      my $res = $cb->( HTTP::Request->new( GET => "http://localhost/foo" ) );
       is $res->code, 301, 'got right status for request at /foo';
       my $port = $res->header('X-Server-Port');
       like $res->header('Location'), qr!http://[^/]+/foo/redirect!, 'got right proxied redirect URL';
