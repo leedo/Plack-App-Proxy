@@ -7,7 +7,7 @@ use Plack::Request;
 use HTTP::Headers;
 use AnyEvent::HTTP;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 # hop-by-hop headers (see also RFC2616)
 my @hop_by_hop = qw(

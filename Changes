@@ -1,5 +1,12 @@
 Revision history for Plack-App-Proxy
 
+0.18    02/17/2010
+        - Fixes for RewriteLocation when used on a mounted proxy
+          (hiratara, rbuels)
+        - Ignore $ENV{http_proxy}
+        - Include reason for failure in 502 response
+        - Disabled persistent HTTP connection option in AnyEvent::HTTP
+          
 0.17    01/19/2010
         - Bump version to fix some CPAN issues
 
