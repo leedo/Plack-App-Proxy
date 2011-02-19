@@ -10,6 +10,11 @@ use LWP::UserAgent;
 use base Exporter::;
 our @EXPORT = qw(test_proxy);
 
+BEGIN {
+  # disable HTTP proxy when testing since we are connecting to localhost
+  delete $ENV{http_proxy};
+}
+
 sub test_proxy {
     my %args = @_;
 
