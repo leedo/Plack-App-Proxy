@@ -195,7 +195,7 @@ test_proxy(
     $res = $cb->(
       HTTP::Request->new( GET => "http://localhost/error" )
     );
-    is $res->code, 502, 'Success the error request.';
+    like $res->code, qr/^(?:400|502)$/, 'Success the error request.';
 
     $res = $cb->(
       HTTP::Request->new( GET => "http://localhost/" )
