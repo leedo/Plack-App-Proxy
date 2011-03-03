@@ -84,7 +84,7 @@ sub call {
     my $content = $req->content;
 
     my $backend_class = Plack::Util::load_class(
-        $self->backend, 'Plack::App::Proxy::Backend'
+        ($ENV{PLACK_PROXY_BACKEND} || $self->backend), 'Plack::App::Proxy::Backend'
     );
 
     return $backend_class->new(
