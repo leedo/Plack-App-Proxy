@@ -164,6 +164,11 @@ C<http://example.com/app/foo/bar>.
 Preserves the original Host header, which is useful when you do
 reverse proxying to the internal hosts.
 
+=item backend
+
+The HTTP backend to use. This dist comes with C<LWP> and C<AnyEvent::HTTP>
+backends. C<AnyEvent::HTTP> is the default if no backend is specified.
+
 =back
 
 =head1 MIDDLEWARE CONFIGURATIONS

@@ -62,3 +62,32 @@ sub call {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Plack::App::Proxy::Backend::LWP - backend which uses LWP::UserAgent
+
+=head1 SYNOPSIS
+
+  my $app = Plack::App::Proxy->new(backend => 'LWP')->to_app;
+
+=head1 DESCRIPTION
+
+This backend uses L<LWP::UserAgent> to make HTTP requests.
+
+=head1 AUTHOR
+ 
+Lee Aylward
+
+Masahiro Honma
+
+Tatsuhiko Miyagawa
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

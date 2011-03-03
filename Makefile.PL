@@ -9,6 +9,7 @@ test_requires 'IO::Socket::INET';
 requires 'Plack' => '0.9913'; # for psgix.io supports.
 requires 'HTTP::Headers';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
+requires 'LWP::UserAgent';
 tests 't/*.t t/*/*.t';
 auto_set_repository;
 WriteAll;
