@@ -62,3 +62,33 @@ sub call {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Plack::App::Proxy::Backend::AnyEvent::HTTP - backend which uses AnyEvent::HTTP
+
+=head1 SYNOPSIS
+
+  my $app = Plack::App::Proxy->new(backend => 'AnyEvent::HTTP')->to_app;
+
+=head1 DESCRIPTION
+
+This backend uses L<AnyEvent::HTTP> to make HTTP requests. This is the default
+backend used when no backend is specified in the constructor.
+
+=head1 AUTHOR
+ 
+Lee Aylward
+
+Masahiro Honma
+
+Tatsuhiko Miyagawa
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
