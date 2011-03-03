@@ -39,6 +39,11 @@ OPTIONS
         Preserves the original Host header, which is useful when you do
         reverse proxying to the internal hosts.
 
+    backend
+        The HTTP backend to use. This dist comes with "LWP" and
+        "AnyEvent::HTTP" backends. "AnyEvent::HTTP" is the default if no
+        backend is specified.
+
 MIDDLEWARE CONFIGURATIONS
     This application is just like a normal PSGI application and is
     middleware aware, which means you can modify proxy requests (and
@@ -80,6 +85,8 @@ AUTHOR
     Masahiro Honma
 
     Tatsuhiko Miyagawa
+
+    Jesse Luehrs
 
 LICENSE
     This library is free software; you can redistribute it and/or modify it

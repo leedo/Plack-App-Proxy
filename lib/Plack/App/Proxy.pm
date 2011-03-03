@@ -7,7 +7,7 @@ use Plack::Request;
 use Plack::Util;
 use HTTP::Headers;
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 sub prepare_app {
     my $self = shift;
@@ -220,6 +220,8 @@ Lee Aylward
 Masahiro Honma
 
 Tatsuhiko Miyagawa
+
+Jesse Luehrs
 
 =head1 LICENSE
 
