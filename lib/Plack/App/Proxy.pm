@@ -11,7 +11,7 @@ our $VERSION = '0.18';
 
 sub prepare_app {
     my $self = shift;
-    $self->backend('AnyEvent::HTTP') unless defined $self->backend;
+    $self->backend($ENV{PLACK_PROXY_BACKEND} || 'AnyEvent::HTTP') unless defined $self->backend;
 }
 
 # hop-by-hop headers (see also RFC2616)
@@ -84,7 +84,7 @@ sub call {
     my $content = $req->content;
 
     my $backend_class = Plack::Util::load_class(
-        ($ENV{PLACK_PROXY_BACKEND} || $self->backend), 'Plack::App::Proxy::Backend'
+        $self->backend, 'Plack::App::Proxy::Backend'
     );
 
     return $backend_class->new(
