@@ -63,7 +63,9 @@ sub call {
                 } else {
                     # Auto-guessing url_map
                     my $original_url = "$env->{'psgi.url_scheme'}://" . 
-                                       "$env->{HTTP_HOST}$env->{REQUEST_URI}";
+                                       $env->{HTTP_HOST} .
+                                       $env->{SCRIPT_PATH} .
+                                       $env->{PATH_INFO};
                     $original_url .= '?' . $env->{QUERY_STRING}
                         if defined $env->{QUERY_STRING} && $env->{QUERY_STRING};
                     @map = _different_part(
