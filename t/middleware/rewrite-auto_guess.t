@@ -44,7 +44,11 @@ sub test_rewriting_path($$$) {
         client => sub {
             my $cb = shift;
 
-            my $res = $cb->(GET "http://localhost$from/redirect");
+            my $url = "http://localhost$from/redirect";
+            # Guess correctly even if the original request contains query
+            $url .= $1 if $redirect_to =~ /(\?.+$)/;
+            my $res = $cb->(GET $url);
+
             is $res->code, 301, 'got right status to redirect';
             like $res->header('Location'), 
                  qr!^http://[^/]+\Q$from$redirect_to\E$!,
