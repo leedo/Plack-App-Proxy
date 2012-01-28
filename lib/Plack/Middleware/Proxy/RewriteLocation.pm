@@ -23,6 +23,13 @@ sub _different_part($$) {
 sub new {
     my $self = shift->SUPER::new( @_ );
 
+    # regularize the remote URLs in the URL map
+    if( my $m = $self->url_map ) {
+        for( my $i = 1; $i < @$m; $i += 2 ) {
+            $m->[$i] = $self->_regularize_url( $m->[$i] );
+        }
+    }
+
     return $self;
 }
 
@@ -42,6 +49,11 @@ sub call {
 
                 my @map;
                 if ($self->url_map) {
+                    # regularize the format of the location so we can
+                    # compare it correctly (some apps print this
+                    # non-canonically)
+                    $location = $self->_regularize_url( $location );
+
                     my $proxy = "$env->{'psgi.url_scheme'}://$env->{HTTP_HOST}";
                     my @url_map = @{$self->url_map};
 
@@ -73,6 +85,10 @@ sub call {
             return $respond->( $res );
         });
     };
+}
+
+sub _regularize_url {
+    '' . URI->new( $_[1] )->canonical
 }
 
 1;
