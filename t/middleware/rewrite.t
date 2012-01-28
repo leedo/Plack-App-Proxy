@@ -83,4 +83,32 @@ test_proxy(
   },
 );
 
+# Reproduction test of the URI->canonical's bug
+test_proxy(
+    proxy => sub {
+        Plack::Middleware::Proxy::RewriteLocation->wrap(
+            Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]/"),
+            url_map => ["/" => "http://$_[0]:$_[1]"],
+        ),
+    },
+    app   => sub {
+        my $env = shift;
+        return [301, [
+            # URI->canonical can't handle this URL correctly
+            # https://github.com/gisle/uri/pull/5
+            Location => "http://$env->{HTTP_HOST}?hoge=1",
+            "X-App-Port" => $env->{SERVER_PORT},
+        ], []];
+    },
+    client => sub {
+        my $cb = shift;
+        my $res = $cb->(HTTP::Request->new(GET => "http://localhost"));
+
+        is $res->code, 301;
+        my $app_port = $res->header('X-App-Port');
+        unlike $res->header('Location'), qr/:$app_port\b/,
+               "Location header should be rewritten";
+    },
+);
+
 done_testing;
