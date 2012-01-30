@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.20
+        - Fix auto guessing of RewriteLocation.
+
 0.19
         - Add pluggable backends, since AnyEvent seems to be flaky on
           some systems. (doy)
