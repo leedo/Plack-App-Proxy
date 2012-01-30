@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.21
+        - Bump version to fix some CPAN issues.
+
 0.20
         - Fix auto guessing of RewriteLocation.
 
