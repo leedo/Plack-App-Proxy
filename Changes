@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.22
+        - Filter out Status header since it's forbidden in PSGI spec (miyagawa)
+
 0.21
         - Bump version to fix some CPAN issues.
 
