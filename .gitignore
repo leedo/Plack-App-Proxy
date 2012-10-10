@@ -6,5 +6,6 @@ MANIFEST.bak
 \.bak
 blib
 META.yml
+MYMETA.*
 inc
 *.tar.gz
