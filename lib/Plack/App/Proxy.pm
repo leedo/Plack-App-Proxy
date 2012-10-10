@@ -105,6 +105,9 @@ sub response_headers {
     );
     $self->filter_headers( $headers );
 
+    # Remove PSGI forbidden headers
+    $headers->remove_header('Status');
+
     my @headers;
     $headers->scan( sub { push @headers, @_ } );
 
