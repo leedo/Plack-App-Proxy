@@ -1,5 +1,10 @@
 use strict;
 use warnings;
+
+BEGIN {
+  $ENV{PERL_ANYEVENT_AVOID_GUARD} = 1 if $^O eq "MSWin32";
+}
+
 use Test::More;
 use Test::TCP;
 use IO::Socket::INET;
