@@ -62,8 +62,7 @@ sub build_headers_from_env {
     $headers->remove_header("Host") unless $self->preserve_host_header;
     $self->filter_headers( $headers );
 
-    # Just assume HTTP::Headers is a blessed hash ref
-    +{%$headers};
+    +{ map {$_ => $headers->header($_) } $headers->header_field_names };
 }
 
 sub call {
