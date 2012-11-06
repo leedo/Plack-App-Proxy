@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.23    11/05/2012
+        - Fix test failures from newer HTTP::Headers
+
 0.22
         - Filter out Status header since it's forbidden in PSGI spec (miyagawa)
 
