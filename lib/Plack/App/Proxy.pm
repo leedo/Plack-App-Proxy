@@ -62,7 +62,7 @@ sub build_headers_from_env {
     $headers->remove_header("Host") unless $self->preserve_host_header;
     $self->filter_headers( $headers );
 
-    +{ map {$_ => $headers->header($_) } $headers->header_field_names };
+    +{ map {$_ => scalar $headers->header($_) } $headers->header_field_names };
 }
 
 sub call {
