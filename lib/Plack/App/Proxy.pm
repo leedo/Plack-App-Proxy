@@ -1,6 +1,7 @@
 package Plack::App::Proxy;
 
 use strict;
+use 5.008_001;
 use parent 'Plack::Component';
 use Plack::Util::Accessor qw/remote preserve_host_header backend/;
 use Plack::Request;
