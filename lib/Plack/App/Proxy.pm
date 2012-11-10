@@ -8,7 +8,7 @@ use Plack::Request;
 use Plack::Util;
 use HTTP::Headers;
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 sub prepare_app {
     my $self = shift;

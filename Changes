@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.25    11/10/2012
+        - Fix problem with META.yml
+
 0.24    11/10/2012
         - Skip CONNECT test on Windows
 
