@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.24    11/10/2012
+        - Skip CONNECT test on Windows
+
 0.23    11/05/2012
         - Fix test failures from newer HTTP::Headers
 
