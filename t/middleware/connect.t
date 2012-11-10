@@ -6,6 +6,10 @@ use IO::Socket::INET;
 use Plack::Loader;
 use Plack::Middleware::Proxy::Connect;
 
+if ($^O eq "MSWin32") {
+  plan skip_all => "perl crashes on Win32";
+}
+
 test_tcp(
     client => sub {
         my $port_proxy = shift;
