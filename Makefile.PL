@@ -6,7 +6,8 @@ test_requires 'Test::More' => '0.88';  # for done_testing()
 test_requires 'Test::Requires';
 test_requires 'Test::TCP';
 test_requires 'IO::Socket::INET';
-requires 'Plack' => '0.9913'; # for psgix.io supports.
+requires 'Plack' => '1.0013'; # for seek(0,0) on psgi.input
+                              # for psgix.io support in 0.9913
 requires 'HTTP::Headers';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
 requires 'LWP::UserAgent';
