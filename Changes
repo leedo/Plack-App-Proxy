@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.26    02/26/2012
+        - Add parent dependency
+
 0.25    11/10/2012
         - Fix problem with META.yml
 
