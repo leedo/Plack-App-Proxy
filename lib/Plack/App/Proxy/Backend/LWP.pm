@@ -23,8 +23,6 @@ sub call {
         $ua->add_handler(
             response_header => sub {
                 my ($res) = @_;
-                # Just assume HTTP::Headers is a blessed hash ref
-                my $headers = { %{ $res->headers } };
 
                 $env->{'plack.proxy.last_protocol'} = '1.1'; # meh
                 $env->{'plack.proxy.last_status'}   = $res->code;
@@ -33,7 +31,7 @@ sub call {
 
                 $writer = $respond->([
                     $res->code,
-                    [$self->response_headers->($headers)],
+                    [$self->response_headers->($res->headers)],
                 ]);
             },
         );
@@ -54,8 +52,7 @@ sub call {
         return if $writer;
         $respond->([
             $res->code,
-            # Just assume HTTP::Headers is a blessed hash ref
-            [$self->response_headers->({ %{ $res->headers } })],
+            [$self->response_headers->($res->headers)],
             [$res->content],
         ]);
     };

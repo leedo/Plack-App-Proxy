@@ -27,9 +27,13 @@ sub call {
                     $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
                     $env->{'plack.proxy.last_url'}      = $headers->{URL};
 
+                    my $http_headers = HTTP::Headers->new( 
+                      map { $_ => $headers->{$_} } grep {! /^[A-Z]/} keys %$headers
+                    );
+
                     $writer = $respond->([
                         $headers->{Status},
-                        [$self->response_headers->($headers)],
+                        [$self->response_headers->($http_headers)],
                     ]);
                 }
                 return 1;
