@@ -1,6 +1,9 @@
 Revision history for Plack-App-Proxy
 
-0.26    02/26/2012
+0.27    02/26/2013
+        - Remove more HTTP::Headers assumptions
+
+0.26    02/26/2013
         - Add parent dependency
 
 0.25    11/10/2012
