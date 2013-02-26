@@ -11,6 +11,7 @@ requires 'Plack' => '1.0013'; # for seek(0,0) on psgi.input
 requires 'HTTP::Headers';
 requires 'AnyEvent::HTTP' => 1.44; # for Host header
 requires 'LWP::UserAgent';
+requires 'parent';
 tests 't/*.t t/*/*.t';
 auto_set_repository;
 WriteAll;
