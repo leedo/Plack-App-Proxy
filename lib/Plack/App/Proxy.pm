@@ -3,7 +3,7 @@ package Plack::App::Proxy;
 use strict;
 use 5.008_001;
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/remote preserve_host_header backend/;
+use Plack::Util::Accessor qw/remote preserve_host_header backend options/;
 use Plack::Request;
 use Plack::Util;
 use HTTP::Headers;
@@ -92,6 +92,7 @@ sub call {
         headers          => $headers,
         method           => $method,
         content          => $content,
+        options          => $self->options,
         response_headers => sub { $self->response_headers(@_) },
     )->call($env);
 }
@@ -168,6 +169,10 @@ reverse proxying to the internal hosts.
 The HTTP backend to use. This dist comes with C<LWP> and C<AnyEvent::HTTP>
 backends. C<AnyEvent::HTTP> is the default if no backend is specified.
 
+=item options
+
+The options for the HTTP backend instance.
+
 =back
 
 =head1 MIDDLEWARE CONFIGURATIONS
@@ -213,7 +218,7 @@ proxies to the internal host otherwise.
   };
 
 =head1 AUTHOR
- 
+
 Lee Aylward
 
 Masahiro Honma
