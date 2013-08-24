@@ -44,6 +44,9 @@ OPTIONS
         "AnyEvent::HTTP" backends. "AnyEvent::HTTP" is the default if no
         backend is specified.
 
+    options
+        The options for the HTTP backend instance.
+
 MIDDLEWARE CONFIGURATIONS
     This application is just like a normal PSGI application and is
     middleware aware, which means you can modify proxy requests (and

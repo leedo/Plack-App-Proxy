@@ -17,7 +17,7 @@ sub call {
             $self->content
         );
 
-        my $ua = LWP::UserAgent->new;
+        my $ua = LWP::UserAgent->new(%{ $self->options || {} });
         my $writer;
 
         $ua->add_handler(
@@ -75,7 +75,7 @@ Plack::App::Proxy::Backend::LWP - backend which uses LWP::UserAgent
 This backend uses L<LWP::UserAgent> to make HTTP requests.
 
 =head1 AUTHOR
- 
+
 Lee Aylward
 
 Masahiro Honma

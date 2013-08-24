@@ -2,7 +2,7 @@ package Plack::App::Proxy::Backend;
 
 use strict;
 use parent 'Plack::Component';
-use Plack::Util::Accessor qw/url req headers method content response_headers/;
+use Plack::Util::Accessor qw/url req headers method content response_headers options/;
 
 1;
 
@@ -27,7 +27,7 @@ Plack::App::Proxy::Backend - pluggable backend for making the actual HTTP reques
 This is a base class for HTTP backends for L<Plack::App::Proxy>.
 
 =head1 AUTHOR
- 
+
 Lee Aylward
 
 Masahiro Honma
