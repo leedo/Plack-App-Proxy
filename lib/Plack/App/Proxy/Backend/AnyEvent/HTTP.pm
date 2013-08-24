@@ -18,6 +18,7 @@ sub call {
             body => $self->content,
             recurse => 0,  # want not to treat any redirections
             persistent => 0,
+            %{ $self->options || {} },
             on_header => sub {
                 my $headers = shift;
 
@@ -27,7 +28,7 @@ sub call {
                     $env->{'plack.proxy.last_reason'}   = $headers->{Reason};
                     $env->{'plack.proxy.last_url'}      = $headers->{URL};
 
-                    my $http_headers = HTTP::Headers->new( 
+                    my $http_headers = HTTP::Headers->new(
                       map { $_ => $headers->{$_} } grep {! /^[A-Z]/} keys %$headers
                     );
 
@@ -83,7 +84,7 @@ This backend uses L<AnyEvent::HTTP> to make HTTP requests. This is the default
 backend used when no backend is specified in the constructor.
 
 =head1 AUTHOR
- 
+
 Lee Aylward
 
 Masahiro Honma
