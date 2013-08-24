@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.28    08/24/2013
+        - allow passing options to backend (clkao)
+
 0.27    02/26/2013
         - Remove more HTTP::Headers assumptions
 
