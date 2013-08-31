@@ -1,5 +1,8 @@
 Revision history for Plack-App-Proxy
 
+0.29    08/31/2013
+        - Better cookie support with the AnyEvent::HTTP backend (Manni Heumann)
+
 0.28    08/24/2013
         - allow passing options to backend (clkao)
 
