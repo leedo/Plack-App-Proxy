@@ -32,6 +32,12 @@ sub call {
                       map { $_ => $headers->{$_} } grep {! /^[A-Z]/} keys %$headers
                     );
 
+                    my $cookies = $http_headers->header( 'Set-Cookie' );
+                    if ( $cookies ) {
+                        my @cookies = split /,(?=\S+)/, $cookies;
+                        $http_headers->header( Set_Cookie => \@cookies );
+                    }
+
                     $writer = $respond->([
                         $headers->{Status},
                         [$self->response_headers->($http_headers)],

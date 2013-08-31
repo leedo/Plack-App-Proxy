@@ -204,4 +204,91 @@ test_proxy(
   },
 );
 
+# server tries to set one cookie
+test_proxy(
+  proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]" ) },
+  app   => sub {
+    my $env = shift;
+    is $env->{PATH_INFO}, '/index.html', 'PATH_INFO accessed';
+    return [
+        200,
+        [
+            'Set-Cookie',
+            'foo=bar; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure; HttpOnly',
+        ],
+        [ ('x') x 123, ('y') x 111 ]
+    ];
+  },
+  client => sub {
+    my $cb = shift;
+    my $req = HTTP::Request->new(GET => "http://localhost/index.html");
+    my $res = $cb->($req);
+    ok $res->is_success, "Check the status line.";
+    is $res->content, ('x' x 123) . ('y' x 111), "static proxy";
+    my @cookies = $res->header( 'Set-Cookie' );
+    is $#cookies, 0, 'one cookies sent by server';
+  },
+);
+
+# server tries to set two cookies
+test_proxy(
+  proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]" ) },
+  app   => sub {
+    my $env = shift;
+    is $env->{PATH_INFO}, '/index.html', 'PATH_INFO accessed';
+    return [
+        200,
+        [
+            'Set-Cookie',
+            'foo=bar; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure; HttpOnly',
+            'Set-Cookie',
+            'bar=foo; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure; HttpOnly',
+        ],
+        [ ('x') x 123, ('y') x 111 ]
+    ];
+  },
+  client => sub {
+    my $cb = shift;
+    my $req = HTTP::Request->new(GET => "http://localhost/index.html");
+    my $res = $cb->($req);
+    ok $res->is_success, "Check the status line.";
+    is $res->content, ('x' x 123) . ('y' x 111), "static proxy";
+    my @cookies = $res->header( 'Set-Cookie' );
+    is $#cookies, 1, 'two cookies sent by server';
+  },
+);
+
+# server tries to set four cookies
+test_proxy(
+  proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]" ) },
+  app   => sub {
+    my $env = shift;
+    is $env->{PATH_INFO}, '/index.html', 'PATH_INFO accessed';
+    return [
+        200,
+        [
+            'Set-Cookie',
+            'foo=bar; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure; HttpOnly',
+            'Set-Cookie',
+            'bar=foo',
+            'Set-Cookie',
+            'third=some value; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure; HttpOnly',
+            'Set-Cookie',
+            'fifth=some othervalue; path=/blah; expires Sun, 31-Aug-2025 11:28:00 GMT; secure',
+        ],
+        [ ('x') x 123, ('y') x 111 ]
+    ];
+  },
+  client => sub {
+    my $cb = shift;
+    my $req = HTTP::Request->new(GET => "http://localhost/index.html");
+    my $res = $cb->($req);
+    ok $res->is_success, "Check the status line.";
+    is $res->content, ('x' x 123) . ('y' x 111), "static proxy";
+    my @cookies = $res->header( 'Set-Cookie' );
+    is $#cookies, 3, 'four cookies sent by server';
+  },
+);
+
+
 done_testing;
