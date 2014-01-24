@@ -6,7 +6,7 @@ use Plack::Loader;
 use Plack::Test;
 use Test::More;
 use Test::TCP;
-use LWP::UserAgent;
+use Plack::LWPish;
 use base Exporter::;
 our @EXPORT = qw(test_proxy);
 
@@ -15,7 +15,10 @@ BEGIN {
   delete $ENV{http_proxy};
 }
 
-our @BACKENDS = qw/LWP AnyEvent::HTTP/;
+use constant HAS_LWP => eval { require LWP::UserAgent; 1; };
+
+our @BACKENDS = qw/AnyEvent::HTTP/;
+push @BACKENDS, qw/LWP/ if HAS_LWP;
 
 sub test_proxy {
     my %args = @_;
@@ -39,7 +42,7 @@ sub test_proxy {
                     client => $client,
                     host => $host,
                     # disable the auto redirection of LWP::UA
-                    ua => LWP::UserAgent->new( max_redirect => 0 ),
+                    ua => Plack::LWPish->new( max_redirect => 0 ),
                 );
             },
             server => sub {
