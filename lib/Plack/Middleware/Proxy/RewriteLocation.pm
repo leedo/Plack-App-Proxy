@@ -9,8 +9,8 @@ use URI;
 sub _different_part($$) {
     my ($from, $to) = @_;
 
-    while ($from =~ m{[^/]+(?:\://$|/$|$)}g) {
-        my $last_part = $&;
+    while ($from =~ m{([^/]+(?:\://$|/$|$))}g) {
+        my $last_part = $1;
         last unless $to =~ /\Q$last_part\E$/;
 
         $from =~ s!\Q$last_part\E$!!;
