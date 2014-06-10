@@ -166,8 +166,9 @@ reverse proxying to the internal hosts.
 
 =item backend
 
-The HTTP backend to use. This dist comes with C<LWP> and C<AnyEvent::HTTP>
-backends. C<AnyEvent::HTTP> is the default if no backend is specified.
+The HTTP backend to use. This dist comes with C<HTTP::Tiny>, C<LWP> and
+C<AnyEvent::HTTP> backends. C<AnyEvent::HTTP> is the default if no
+backend is specified.
 
 =item options
 
