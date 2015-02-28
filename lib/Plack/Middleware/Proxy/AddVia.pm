@@ -1,5 +1,6 @@
 package Plack::Middleware::Proxy::AddVia;
 use strict;
+use warnings;
 use parent 'Plack::Middleware';
 
 use Plack::Util;

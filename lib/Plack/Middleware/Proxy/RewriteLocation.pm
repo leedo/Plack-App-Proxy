@@ -1,5 +1,6 @@
 package Plack::Middleware::Proxy::RewriteLocation;
 use strict;
+use warnings;
 use parent 'Plack::Middleware';
 
 use Plack::Util;
