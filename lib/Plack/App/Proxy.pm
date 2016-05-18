@@ -122,6 +122,7 @@ Plack::App::Proxy - proxy requests
 =head1 SYNOPSIS
 
   use Plack::Builder;
+  use Plack::App::Proxy;
 
   # proxy all requests for /static to 127.0.0.1:80
   builder {
