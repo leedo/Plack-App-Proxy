@@ -1,6 +1,7 @@
 package Plack::App::Proxy::Backend::LWP;
 
 use strict;
+use warnings;
 use parent 'Plack::App::Proxy::Backend';
 use LWP::UserAgent;
 

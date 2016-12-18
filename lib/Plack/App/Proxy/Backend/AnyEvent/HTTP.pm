@@ -1,6 +1,7 @@
 package Plack::App::Proxy::Backend::AnyEvent::HTTP;
 
 use strict;
+use warnings;
 use parent 'Plack::App::Proxy::Backend';
 use AnyEvent::HTTP;
 
