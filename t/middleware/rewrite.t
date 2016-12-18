@@ -5,7 +5,6 @@ use Plack::Builder;
 use Plack::Middleware::Proxy::RewriteLocation;
 use Test::More;
 use Plack::App::Proxy::Test;
-use LWP::UserAgent;
 
 test_proxy(
   proxy => sub {

@@ -4,6 +4,26 @@ use Test::More;
 use Plack::App::Proxy;
 use Plack::App::Proxy::Test;
 
+
+package My::HTTP::Tiny;
+
+use base 'HTTP::Tiny';
+
+# Preserve Host header
+sub _prepare_headers_and_cb {
+    my ($self, $request, $args, $url, $auth) = @_;
+    my $host;
+    while (my ($k, $v) = each %{$args->{headers}}) {
+        $host = $v if lc $k eq 'host';
+    }
+    $self->SUPER::_prepare_headers_and_cb($request, $args, $url, $auth);
+    $request->{headers}{'host'} = $host if $host;
+    return;
+}
+
+
+package main;
+
 # regular static proxy
 test_proxy(
   proxy => sub { Plack::App::Proxy->new(remote => "http://$_[0]:$_[1]") },
@@ -40,6 +60,7 @@ test_proxy(
       };
     },
     app   => sub { [ 200, [], ["WORLD"] ] },
+    ua    => Plack::LWPish->new( My::HTTP::Tiny->new( max_redirect => 0 ) ),
     client => sub {
       my $cb = shift;
       my $req1 = HTTP::Request->new(
@@ -66,6 +87,7 @@ test_proxy(
     is $env->{HTTP_HOST}, "__TEST__", "preserve host header";
     [ 200, [], [ 'DUMMY' ] ];
   },
+  ua     => Plack::LWPish->new( My::HTTP::Tiny->new( max_redirect => 0 ) ),
   client => sub {
     my $cb = shift;
     my $req = HTTP::Request->new(
