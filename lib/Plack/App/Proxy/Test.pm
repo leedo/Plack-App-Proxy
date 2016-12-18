@@ -15,7 +15,7 @@ BEGIN {
   delete $ENV{http_proxy};
 }
 
-our @BACKENDS = qw/LWP AnyEvent::HTTP/;
+our @BACKENDS = qw/HTTP::Tiny LWP AnyEvent::HTTP/;
 
 sub test_proxy {
     my %args = @_;
